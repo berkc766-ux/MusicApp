@@ -5,3 +5,6 @@ https://excalidraw.com/#json=27ZRkcE-iEDxIQ91WfNDI,F6nS97VAKNWC_-fCYJc0Vw
 
 #DATABASE PASS:
 nCvhAsuZyNp4vlpc
+
+NEW PASS:
+QePChgw6j1ErvXRq
