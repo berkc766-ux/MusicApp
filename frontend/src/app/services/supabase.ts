@@ -12,107 +12,66 @@ export class SupabaseService {
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
   }
 
-  // 1. READ: List all songs by a certain artist and show the albums those songs appear on
-  async getSongsByArtist(artistName: string) {
+  // AUTHENTICATION
+  async authenticateUser(email: string, passwordString: string) {
     const { data, error } = await this.supabase
-      .from('artists')
-      .select(`
-        id,
-        stage_name,
-        albums (
-          id,
-          title,
-          album_songs (
-            songs (
-              id,
-              title,
-              duration_sec
-            )
-          )
-        )
-      `)
-      .eq('stage_name', artistName)
-      .single(); // Assuming stage_name is highly specific/unique
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .eq('password', passwordString)
+      .single();
+
+    if (error || !data) throw error || new Error('Invalid credentials');
+    return data;
+  }
+
+  async getUserById(userId: number) {
+    const { data, error } = await this.supabase
+      .from('users')
+      .select('id, username, email, first_name, last_name, role')
+      .eq('id', userId)
+      .single();
 
     if (error) throw error;
     return data;
   }
 
-  // 2. READ: List all playlist names for a user and the total number of songs in each
-  async getUserPlaylistsWithSongCount(userId: string) {
+  // GET SPOTIFY-LIKE DASHBOARD DATA
+  async getFeaturedPlaylists() {
     const { data, error } = await this.supabase
       .from('playlists')
-      .select(`
-        id,
-        name,
-        playlist_songs (count)
-      `)
-      .eq('user_id', userId);
-
+      .select('id, name, description, user_id, users(username)')
+      .limit(6);
     if (error) throw error;
     return data;
   }
 
-  // 3. UPDATE: Change the name of a specific song
-  async updateSongName(songId: string, newTitle: string) {
+  async getRecentSongs() {
     const { data, error } = await this.supabase
       .from('songs')
-      .update({ title: newTitle })
-      .eq('id', songId)
-      .select();
-
+      .select('id, title, duration_sec, is_explicit, album_songs!inner(albums(id, title, artists(stage_name)))')
+      .limit(10);
     if (error) throw error;
     return data;
   }
 
-  // 4. INSERT: Add a new Artist
-  async addArtist(stageName: string, realName: string, bio: string) {
+  // USER DATA
+  async getUserPlaylists(userId: number) {
     const { data, error } = await this.supabase
-      .from('artists')
-      .insert([{ stage_name: stageName, real_name: realName, bio: bio }])
-      .select();
-
+      .from('playlists')
+      .select('id, name')
+      .eq('user_id', userId);
     if (error) throw error;
     return data;
   }
 
-  // 5. DELETE: Remove an album AND all the songs on it (Cascading logic via Service)
-  async deleteAlbumAndItsSongs(albumId: string) {
-    // Step A: Find all songs associated with this album
-    const { data: albumSongs, error: fetchError } = await this.supabase
-      .from('album_songs')
-      .select('song_id')
-      .eq('album_id', albumId);
-
-    if (fetchError) throw fetchError;
-    const songIds = albumSongs?.map(as => as.song_id) || [];
-
-    // Step B: Delete junction table links to prevent Foreign Key constraint errors
-    const { error: junctionError } = await this.supabase
-      .from('album_songs')
-      .delete()
-      .eq('album_id', albumId);
-
-    if (junctionError) throw junctionError;
-
-    // Step C: Delete the actual album
-    const { error: albumError } = await this.supabase
-      .from('albums')
-      .delete()
-      .eq('id', albumId);
-
-    if (albumError) throw albumError;
-
-    // Step D: Cascade delete the actual songs that belonged to the album
-    if (songIds.length > 0) {
-      const { error: songsError } = await this.supabase
-        .from('songs')
-        .delete()
-        .in('id', songIds);
-
-      if (songsError) throw songsError;
-    }
-
-    return true; // Successfully cascaded manually
+  // To mock "Liked Songs", we can look for a shared playlist or just return random songs for mockup
+  async getLikedSongsMock() {
+    const { data, error } = await this.supabase
+      .from('songs')
+      .select('id, title, duration_sec, is_explicit, album_songs!inner(albums(id, title, artists(stage_name)))')
+      .limit(5);
+    if (error) throw error;
+    return data;
   }
 }
