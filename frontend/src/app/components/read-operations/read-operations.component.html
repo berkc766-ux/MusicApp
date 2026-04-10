@@ -1,0 +1,50 @@
+<div class="read-container">
+  <h2>Read Operations</h2>
+
+  <!-- Requirement 1 -->
+  <section class="card">
+    <h3>1. Find Artist's Songs & Albums</h3>
+    <div class="form-group">
+      <input type="text" [(ngModel)]="artistSearchTerm" placeholder="Enter Artist Name (e.g. Queen)">
+      <button (click)="searchArtistAlbums()">Search</button>
+    </div>
+
+    <div *ngIf="artistError" class="error">{{ artistError }}</div>
+    
+    <div *ngIf="artistData" class="results">
+      <h4>Artist: {{ artistData.stage_name }}</h4>
+      <div *ngFor="let album of artistData.albums" class="album-item">
+        <strong>Album: {{ album.title }}</strong>
+        <ul>
+          <li *ngFor="let rel of album.album_songs">
+            ★ {{ rel.songs?.title }} ({{ rel.songs?.duration_sec }}s)
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Requirement 2 -->
+  <section class="card">
+    <h3>2. Get User Playlists & Song Counts</h3>
+    <div class="form-group">
+      <input type="text" [(ngModel)]="userIdInput" placeholder="Enter User ID (UUID)">
+      <button (click)="searchUserPlaylists()">Get Playlists</button>
+    </div>
+
+    <div *ngIf="playlistsError" class="error">{{ playlistsError }}</div>
+
+    <div *ngIf="playlistsData.length > 0" class="results">
+      <ul>
+        <li *ngFor="let playlist of playlistsData">
+          🎵 Playlist: <strong>{{ playlist.name }}</strong> 
+          (Total Songs: {{ playlist.playlist_songs?.[0]?.count || 0 }})
+        </li>
+      </ul>
+    </div>
+    
+    <div *ngIf="playlistsData.length === 0 && !playlistsError && userIdInput">
+      No playlists found.
+    </div>
+  </section>
+</div>
