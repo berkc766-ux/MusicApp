@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
 import { AuthService } from '../../services/auth';
 
@@ -36,7 +36,7 @@ import { AuthService } from '../../services/auth';
             <a routerLink="/library" routerLinkActive="bg-neutral-800 text-white"
               class="flex items-center gap-4 px-3 py-2.5 rounded-md transition-colors hover:text-white font-semibold text-sm">
               <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current flex-shrink-0">
-                <path d="M3 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zM15.5 2.134A1 1 0 0 0 14 3v18a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V6.464a1 1 0 0 0-.5-.866l-6-3.464zM9 2a1 1 0 0 0-1 1v18a1 1 0 1 0 2 0V3a1 1 0 0 0-1-1z"/>
+                <path d="M3 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zM15.5 2.134A1 1 0 0 0 14 3v18a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V6.464a1 1 0 0 0-.5-.866l-6-3.464zM9 2a1 1 0 0 0-1 1v18a1 1 1 0 1 0 2 0V3a1 1 0 0 0-1-1z"/>
               </svg>
               Your Library
             </a>
@@ -53,7 +53,6 @@ import { AuthService } from '../../services/auth';
         </ul>
       </nav>
 
-      <!-- Divider -->
       <div class="border-t border-neutral-800 mx-3 my-2"></div>
 
       <!-- User's Playlists -->
@@ -83,20 +82,27 @@ import { AuthService } from '../../services/auth';
 export class SidebarComponent implements OnInit {
   playlists: any[] = [];
 
-  constructor(private supabase: SupabaseService, private authService: AuthService) {}
+  constructor(
+    private supabase: SupabaseService,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   async ngOnInit() {
     this.authService.currentUser$.subscribe(async (user) => {
       if (user) {
         try {
           this.playlists = await this.supabase.getUserPlaylists(user.id);
+          this.cdr.detectChanges();
         } catch (e) {}
       }
     });
+
     const user = this.authService.getCurrentUser();
     if (user) {
       try {
         this.playlists = await this.supabase.getUserPlaylists(user.id);
+        this.cdr.detectChanges();
       } catch (e) {}
     }
   }

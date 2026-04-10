@@ -62,18 +62,24 @@ export class SupabaseService {
   async getFeaturedPlaylists() {
     const { data, error } = await this.supabase
       .from('playlists')
-      .select('id, name, description, users(username)')
+      .select('id, name, description, users!user_id(username)')
       .limit(8);
-    if (error) throw error;
+    if (error) {
+      console.warn('getFeaturedPlaylists error:', error.message);
+      return [];
+    }
     return data ?? [];
   }
 
   async getRecentSongs() {
     const { data, error } = await this.supabase
       .from('songs')
-      .select('id, title, duration_sec, is_explicit, album_songs(albums(id, title, artists(stage_name)))')
+      .select('id, title, duration_sec, is_explicit, album_songs(albums(id, title, artists!artist_id(stage_name)))')
       .limit(10);
-    if (error) throw error;
+    if (error) {
+      console.warn('getRecentSongs error:', error.message);
+      return [];
+    }
     return data ?? [];
   }
 
@@ -89,9 +95,12 @@ export class SupabaseService {
   async getAllAlbums() {
     const { data, error } = await this.supabase
       .from('albums')
-      .select('id, title, release_year, record_label, type, artists(stage_name)')
+      .select('id, title, release_year, record_label, type, artists!artist_id(stage_name)')
       .order('release_year', { ascending: false });
-    if (error) throw error;
+    if (error) {
+      console.warn('getAllAlbums error:', error.message);
+      return [];
+    }
     return data ?? [];
   }
 
@@ -99,18 +108,6 @@ export class SupabaseService {
 
   async getSongsByArtist(artistId: number) {
     const { data, error } = await this.supabase
-      .from('songs')
-      .select(`
-        id, title, duration_sec, is_explicit,
-        album_songs(
-          albums(id, title, release_year, artists(stage_name))
-        )
-      `)
-      .filter('album_songs.albums.artist_id', 'eq', artistId);
-    if (error) throw error;
-
-    // Also directly fetch songs via albums -> artist_id
-    const { data: d2, error: e2 } = await this.supabase
       .from('albums')
       .select(`
         id, title, release_year,
@@ -119,8 +116,8 @@ export class SupabaseService {
         )
       `)
       .eq('artist_id', artistId);
-    if (e2) throw e2;
-    return d2 ?? [];
+    if (error) throw error;
+    return data ?? [];
   }
 
   // ─── FEATURE 2: Playlists for a user + song count ────────────────────────
@@ -137,9 +134,12 @@ export class SupabaseService {
   async getPlaylistSongs(playlistId: number) {
     const { data, error } = await this.supabase
       .from('playlist_songs')
-      .select('song_id, added_date, songs(id, title, duration_sec, is_explicit, album_songs(albums(id, title, artists(stage_name))))')
+      .select('song_id, added_date, songs(id, title, duration_sec, is_explicit, album_songs(albums(id, title, artists!artist_id(stage_name))))')
       .eq('playlist_id', playlistId);
-    if (error) throw error;
+    if (error) {
+      console.warn('getPlaylistSongs error:', error.message);
+      return [];
+    }
     return data ?? [];
   }
 
@@ -225,9 +225,12 @@ export class SupabaseService {
   async getSharedPlaylistsForUser(userId: number) {
     const { data, error } = await this.supabase
       .from('shared_playlists')
-      .select('playlists(id, name, description, users(username), playlist_songs(count))')
+      .select('playlists(id, name, description, users!user_id(username), playlist_songs(count))')
       .eq('user_id', userId);
-    if (error) throw error;
+    if (error) {
+      console.warn('getSharedPlaylistsForUser error:', error.message);
+      return [];
+    }
     return data ?? [];
   }
 

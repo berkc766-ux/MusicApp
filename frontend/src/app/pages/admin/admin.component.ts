@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase';
@@ -24,7 +24,7 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
         </button>
       </div>
 
-      <!-- ── TAB 1: Songs by Artist ──────────────────────────────────────────── -->
+      <!-- ── TAB 1: Songs by Artist ────────────────────────────── -->
       <section *ngIf="activeTab === 'songs-by-artist'" class="bg-neutral-900 p-6 rounded-xl">
         <h3 class="text-xl font-bold text-white mb-4">Songs by Artist</h3>
         <div class="flex gap-3 mb-5">
@@ -38,7 +38,6 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
             {{ loadingArtistSongs ? 'Loading...' : 'Search' }}
           </button>
         </div>
-
         <div *ngFor="let album of artistAlbums" class="mb-5">
           <h4 class="text-white font-semibold text-sm mb-2 flex items-center gap-2">
             <span class="bg-neutral-700 px-2 py-0.5 rounded text-xs">{{ album.release_year }}</span>
@@ -55,7 +54,7 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
         <p *ngIf="artistAlbums.length === 0 && selectedArtistId && !loadingArtistSongs" class="text-neutral-500 italic text-sm mt-2">No albums found for this artist.</p>
       </section>
 
-      <!-- ── TAB 2: User Playlists ───────────────────────────────────────────── -->
+      <!-- ── TAB 2: User Playlists ─────────────────────────────── -->
       <section *ngIf="activeTab === 'user-playlists'" class="bg-neutral-900 p-6 rounded-xl">
         <h3 class="text-xl font-bold text-white mb-4">User Playlists & Song Count</h3>
         <div class="flex gap-3 mb-5">
@@ -86,7 +85,7 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
         <p *ngIf="userPlaylists.length === 0 && selectedUserId && !loadingUserPlaylists" class="text-neutral-500 italic text-sm">No playlists found.</p>
       </section>
 
-      <!-- ── TAB 3: Rename Song ──────────────────────────────────────────────── -->
+      <!-- ── TAB 3: Rename Song ────────────────────────────────── -->
       <section *ngIf="activeTab === 'rename-song'" class="bg-neutral-900 p-6 rounded-xl">
         <h3 class="text-xl font-bold text-white mb-4">Change Song Name</h3>
         <div class="space-y-4 max-w-lg">
@@ -107,15 +106,13 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
             class="bg-green-500 text-black font-bold px-5 py-2 rounded-full hover:bg-green-400 transition disabled:opacity-50">
             {{ renamingInProgress ? 'Saving...' : 'Save Name' }}
           </button>
-          <div *ngIf="renameMsg" [class]="renameSuccess
-            ? 'text-green-400 text-sm bg-green-500/10 border border-green-500 p-3 rounded-lg'
-            : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
+          <div *ngIf="renameMsg" [class]="renameSuccess ? 'text-green-400 text-sm bg-green-500/10 border border-green-500 p-3 rounded-lg' : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
             {{ renameMsg }}
           </div>
         </div>
       </section>
 
-      <!-- ── TAB 4: Add Artist ───────────────────────────────────────────────── -->
+      <!-- ── TAB 4: Add Artist ──────────────────────────────────── -->
       <section *ngIf="activeTab === 'add-artist'" class="bg-neutral-900 p-6 rounded-xl">
         <h3 class="text-xl font-bold text-white mb-4">Add New Artist</h3>
         <form (ngSubmit)="submitAddArtist()" class="space-y-4 max-w-lg">
@@ -143,20 +140,16 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
             class="bg-green-500 text-black font-bold px-5 py-2 rounded-full hover:bg-green-400 transition disabled:opacity-50">
             {{ addingArtist ? 'Adding...' : 'Add Artist' }}
           </button>
-          <div *ngIf="addArtistMsg" [class]="addArtistSuccess
-            ? 'text-green-400 text-sm bg-green-500/10 border border-green-500 p-3 rounded-lg'
-            : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
+          <div *ngIf="addArtistMsg" [class]="addArtistSuccess ? 'text-green-400 text-sm bg-green-500/10 border border-green-500 p-3 rounded-lg' : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
             {{ addArtistMsg }}
           </div>
         </form>
       </section>
 
-      <!-- ── TAB 5: Delete Album ─────────────────────────────────────────────── -->
+      <!-- ── TAB 5: Delete Album ────────────────────────────────── -->
       <section *ngIf="activeTab === 'delete-album'" class="bg-neutral-900 p-6 rounded-xl">
         <h3 class="text-xl font-bold text-white mb-2">Remove Album & Songs</h3>
-        <p class="text-neutral-400 text-sm mb-4">
-          Deletes the album and all songs that exclusively belong to it (songs shared with other albums are kept).
-        </p>
+        <p class="text-neutral-400 text-sm mb-4">Deletes the album and all songs that exclusively belong to it.</p>
         <div class="space-y-4 max-w-lg">
           <div>
             <label class="block text-sm font-medium text-neutral-300 mb-1">Select Album</label>
@@ -168,17 +161,14 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
               </option>
             </select>
           </div>
-          <!-- Confirmation -->
           <div *ngIf="selectedAlbumId && !deleteMsg" class="bg-yellow-500/10 border border-yellow-500 text-yellow-400 p-3 rounded-lg text-sm">
-            ⚠️ This action cannot be undone. Songs exclusive to this album will also be deleted.
+            ⚠️ This action cannot be undone.
           </div>
           <button (click)="deleteAlbum()" [disabled]="!selectedAlbumId || deletingAlbum"
             class="bg-red-600 text-white font-bold px-5 py-2 rounded-full hover:bg-red-500 transition disabled:opacity-50">
             {{ deletingAlbum ? 'Deleting...' : 'Delete Album' }}
           </button>
-          <div *ngIf="deleteMsg" [class]="deleteSuccess
-            ? 'text-green-400 text-sm bg-green-500/10 border border-green-500 p-3 rounded-lg'
-            : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
+          <div *ngIf="deleteMsg" [class]="deleteSuccess ? 'text-green-400 text-sm bg-green-500/10 border border-green-500 p-3 rounded-lg' : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
             {{ deleteMsg }}
           </div>
         </div>
@@ -188,7 +178,6 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
 })
 export class AdminComponent implements OnInit {
   activeTab: Tab = 'songs-by-artist';
-
   tabs = [
     { key: 'songs-by-artist' as Tab, label: '🎵 Songs by Artist' },
     { key: 'user-playlists' as Tab, label: '📋 User Playlists' },
@@ -197,60 +186,53 @@ export class AdminComponent implements OnInit {
     { key: 'delete-album' as Tab, label: '🗑️ Delete Album' },
   ];
 
-  // shared data
   artists: any[] = [];
   allUsers: any[] = [];
   allSongs: any[] = [];
   allAlbums: any[] = [];
 
-  // tab 1
   selectedArtistId: any = '';
   artistAlbums: any[] = [];
   loadingArtistSongs = false;
 
-  // tab 2
   selectedUserId: any = '';
   userPlaylists: any[] = [];
   loadingUserPlaylists = false;
 
-  // tab 3
   selectedSongId: any = '';
   newSongTitle = '';
   renamingInProgress = false;
   renameMsg = '';
   renameSuccess = false;
 
-  // tab 4
   newArtist = { stageName: '', realName: '', bio: '', formationYear: undefined as number | undefined };
   addingArtist = false;
   addArtistMsg = '';
   addArtistSuccess = false;
 
-  // tab 5
   selectedAlbumId: any = '';
   deletingAlbum = false;
   deleteMsg = '';
   deleteSuccess = false;
 
-  constructor(private supabase: SupabaseService) {}
+  constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
 
   async ngOnInit() {
     try {
-      [this.artists, this.allAlbums, this.allSongs] = await Promise.all([
+      const [artists, albums, songs, users] = await Promise.all([
         this.supabase.getAllArtists(),
         this.supabase.getAllAlbums(),
         this.supabase.getAllSongs(),
+        this.supabase.getAllUsers(),
       ]);
-      // Load all users for tab 2
-      this.allUsers = await this.loadAllUsers();
+      this.artists = artists;
+      this.allAlbums = albums;
+      this.allSongs = songs;
+      this.allUsers = users;
     } catch (e) {
       console.error(e);
     }
-  }
-
-  private async loadAllUsers(): Promise<any[]> {
-    // Use supabase client directly for users list
-    return this.supabase.getAllUsers?.() ?? [];
+    this.cdr.detectChanges();
   }
 
   async loadSongsByArtist() {
@@ -260,6 +242,7 @@ export class AdminComponent implements OnInit {
       this.artistAlbums = await this.supabase.getSongsByArtist(parseInt(this.selectedArtistId));
     } catch (e) { console.error(e); }
     this.loadingArtistSongs = false;
+    this.cdr.detectChanges();
   }
 
   async loadUserPlaylists() {
@@ -269,6 +252,7 @@ export class AdminComponent implements OnInit {
       this.userPlaylists = await this.supabase.getUserPlaylists(parseInt(this.selectedUserId));
     } catch (e) { console.error(e); }
     this.loadingUserPlaylists = false;
+    this.cdr.detectChanges();
   }
 
   async renameSong() {
@@ -278,7 +262,6 @@ export class AdminComponent implements OnInit {
       const result = await this.supabase.updateSongTitle(parseInt(this.selectedSongId), this.newSongTitle);
       this.renameSuccess = true;
       this.renameMsg = `Song renamed to "${result.title}" successfully.`;
-      // update local list
       const idx = this.allSongs.findIndex((s: any) => s.id === result.id);
       if (idx >= 0) this.allSongs[idx].title = result.title;
       this.newSongTitle = '';
@@ -288,6 +271,7 @@ export class AdminComponent implements OnInit {
       this.renameMsg = e?.message || 'Failed to rename song.';
     }
     this.renamingInProgress = false;
+    this.cdr.detectChanges();
   }
 
   async submitAddArtist() {
@@ -304,6 +288,7 @@ export class AdminComponent implements OnInit {
       this.addArtistMsg = e?.message || 'Failed to add artist.';
     }
     this.addingArtist = false;
+    this.cdr.detectChanges();
   }
 
   async deleteAlbum() {
@@ -320,6 +305,7 @@ export class AdminComponent implements OnInit {
       this.deleteMsg = e?.message || 'Failed to delete album.';
     }
     this.deletingAlbum = false;
+    this.cdr.detectChanges();
   }
 
   fmtDur(s: number): string {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
@@ -11,7 +11,6 @@ import { SupabaseService } from '../../services/supabase';
     <div class="pb-16">
       <h2 class="text-3xl font-bold text-white mb-6">Your Library</h2>
 
-      <!-- User's own playlists -->
       <section class="mb-10">
         <h3 class="text-xl font-bold text-white mb-4">Your Playlists</h3>
         <div *ngIf="loadingOwn" class="text-neutral-400 text-sm italic">Loading...</div>
@@ -26,11 +25,10 @@ import { SupabaseService } from '../../services/supabase';
               <p class="text-neutral-400 text-xs mt-0.5">Playlist · {{ pl.playlist_songs?.[0]?.count ?? 0 }} songs</p>
             </div>
           </div>
-          <p *ngIf="ownPlaylists.length === 0 && !loadingOwn" class="text-neutral-500 italic text-sm">You have no playlists yet.</p>
+          <p *ngIf="!loadingOwn && ownPlaylists.length === 0" class="text-neutral-500 italic text-sm">You have no playlists yet.</p>
         </div>
       </section>
 
-      <!-- Shared playlists -->
       <section class="mb-10">
         <h3 class="text-xl font-bold text-white mb-4">Shared with You</h3>
         <div class="flex flex-col gap-2">
@@ -44,7 +42,7 @@ import { SupabaseService } from '../../services/supabase';
               <p class="text-neutral-400 text-xs mt-0.5">By {{ item.playlists?.users?.username || 'Unknown' }} · {{ item.playlists?.playlist_songs?.[0]?.count ?? 0 }} songs</p>
             </div>
           </div>
-          <p *ngIf="sharedPlaylists.length === 0" class="text-neutral-500 italic text-sm">No shared playlists.</p>
+          <p *ngIf="!loadingOwn && sharedPlaylists.length === 0" class="text-neutral-500 italic text-sm">No shared playlists.</p>
         </div>
       </section>
     </div>
@@ -56,22 +54,29 @@ export class LibraryComponent implements OnInit {
   loadingOwn = true;
   userId = 0;
 
-  constructor(private supabase: SupabaseService, private route: ActivatedRoute) {}
+  constructor(
+    private supabase: SupabaseService,
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   async ngOnInit() {
     const stored = localStorage.getItem('spotify_clone_user_id');
     this.userId = stored ? parseInt(stored) : 0;
     if (this.userId) {
       try {
-        [this.ownPlaylists, this.sharedPlaylists] = await Promise.all([
+        const [own, shared] = await Promise.all([
           this.supabase.getUserPlaylists(this.userId),
           this.supabase.getSharedPlaylistsForUser(this.userId),
         ]);
+        this.ownPlaylists = own;
+        this.sharedPlaylists = shared;
       } catch (e) {
         console.error(e);
       }
     }
     this.loadingOwn = false;
+    this.cdr.detectChanges();
   }
 
   navigateToPlaylist(id: number) {

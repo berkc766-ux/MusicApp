@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SupabaseService } from '../../services/supabase';
 import { AuthService } from '../../services/auth';
@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth';
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.Default,
   template: `
     <div class="pb-16">
       <!-- Greeting -->
@@ -34,11 +35,10 @@ import { AuthService } from '../../services/auth';
           <h2 class="text-2xl font-bold text-white">Featured Playlists</h2>
           <span class="text-sm text-neutral-400 hover:text-white cursor-pointer hover:underline">Show all</span>
         </div>
-        <div *ngIf="isLoading" class="text-neutral-400 text-sm italic">Loading playlists...</div>
+        <div *ngIf="isLoading" class="text-neutral-400 text-sm italic">Loading...</div>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
           <div *ngFor="let pl of featuredPlaylists"
             class="bg-neutral-800 hover:bg-neutral-700 p-4 rounded-lg transition-colors cursor-pointer group relative">
-            <!-- Cover -->
             <div class="aspect-square rounded-md mb-4 relative overflow-hidden bg-neutral-700 shadow-lg flex items-center justify-center">
               <svg viewBox="0 0 24 24" class="h-12 w-12 fill-neutral-500"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
               <button class="absolute bottom-2 right-2 bg-green-500 text-black h-10 w-10 rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105 hover:bg-green-400">
@@ -48,8 +48,8 @@ import { AuthService } from '../../services/auth';
             <h3 class="text-white font-semibold text-sm truncate">{{ pl.name }}</h3>
             <p class="text-neutral-400 text-xs mt-1 line-clamp-2">{{ pl.description || 'By ' + (pl.users?.username || 'Unknown') }}</p>
           </div>
-          <p *ngIf="featuredPlaylists.length === 0 && !isLoading" class="text-neutral-500 italic text-sm col-span-full">No playlists found.</p>
         </div>
+        <p *ngIf="!isLoading && featuredPlaylists.length === 0" class="text-neutral-500 italic text-sm mt-2">No playlists in database yet.</p>
       </section>
 
       <!-- Recent Songs Table -->
@@ -58,7 +58,8 @@ import { AuthService } from '../../services/auth';
           <h2 class="text-2xl font-bold text-white">Recently Added</h2>
           <span class="text-sm text-neutral-400 hover:text-white cursor-pointer hover:underline">Show all</span>
         </div>
-        <table class="w-full text-left">
+        <div *ngIf="isLoading" class="text-neutral-400 text-sm italic">Loading...</div>
+        <table *ngIf="!isLoading" class="w-full text-left">
           <thead>
             <tr class="text-neutral-400 border-b border-neutral-800 text-xs uppercase tracking-wider">
               <th class="w-8 pb-3 font-normal text-center">#</th>
@@ -95,6 +96,7 @@ import { AuthService } from '../../services/auth';
             </tr>
           </tbody>
         </table>
+        <p *ngIf="!isLoading && recentSongs.length === 0" class="text-neutral-500 italic text-sm mt-2">No songs in database yet.</p>
       </section>
 
       <!-- Artists Row -->
@@ -102,7 +104,8 @@ import { AuthService } from '../../services/auth';
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-white">Artists</h2>
         </div>
-        <div class="flex gap-5 overflow-x-auto pb-3">
+        <div *ngIf="isLoading" class="text-neutral-400 text-sm italic">Loading...</div>
+        <div *ngIf="!isLoading" class="flex gap-5 overflow-x-auto pb-3">
           <div *ngFor="let artist of artists"
             class="flex-shrink-0 w-40 text-center cursor-pointer group">
             <div class="h-40 w-40 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-900 mx-auto mb-2 flex items-center justify-center group-hover:opacity-80 transition shadow-lg">
@@ -111,6 +114,7 @@ import { AuthService } from '../../services/auth';
             <p class="text-white text-sm font-semibold">{{ artist.stage_name }}</p>
             <p class="text-neutral-400 text-xs mt-0.5">Artist</p>
           </div>
+          <p *ngIf="artists.length === 0" class="text-neutral-500 italic text-sm">No artists in database yet.</p>
         </div>
       </section>
     </div>
@@ -123,20 +127,28 @@ export class DashboardComponent implements OnInit {
   artists: any[] = [];
   isLoading = true;
 
-  constructor(private supabase: SupabaseService, private authService: AuthService) {}
+  constructor(
+    private supabase: SupabaseService,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   async ngOnInit() {
     this.updateGreeting();
     try {
-      [this.featuredPlaylists, this.recentSongs, this.artists] = await Promise.all([
+      const [playlists, songs, artists] = await Promise.all([
         this.supabase.getFeaturedPlaylists(),
         this.supabase.getRecentSongs(),
         this.supabase.getAllArtists(),
       ]);
+      this.featuredPlaylists = playlists;
+      this.recentSongs = songs;
+      this.artists = artists;
     } catch (e) {
       console.error('Dashboard load error:', e);
     } finally {
       this.isLoading = false;
+      this.cdr.detectChanges(); // Force Angular to re-render after async data
     }
   }
 
