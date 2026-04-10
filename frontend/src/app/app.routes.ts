@@ -2,6 +2,9 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './pages/login/login.component';
 import { LayoutComponent } from './layout/layout.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
+import { LibraryComponent } from './pages/library/library.component';
+import { PlaylistComponent } from './pages/playlist/playlist.component';
+import { AdminComponent } from './pages/admin/admin.component';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -12,8 +15,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'dashboard', component: DashboardComponent },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+      { path: 'library', component: LibraryComponent },
+      { path: 'playlist/:id', component: PlaylistComponent },
+      { path: 'admin', component: AdminComponent },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ]
   },
-  { path: '**', redirectTo: 'dashboard' }
+  { path: '**', redirectTo: '' }
 ];

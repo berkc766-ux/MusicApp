@@ -8,109 +8,147 @@ import { AuthService } from '../../services/auth';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="pb-10">
+    <div class="pb-16">
       <!-- Greeting -->
       <h2 class="text-3xl font-bold text-white mb-6">{{ greeting }}</h2>
 
-      <!-- Recent/Liked Section Mockup -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <div class="bg-white/10 hover:bg-white/20 transition-colors rounded shadow-md flex items-center h-20 cursor-pointer group overflow-hidden">
-          <div class="h-20 w-20 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-            <svg viewBox="0 0 24 24" class="h-8 w-8 text-white fill-current"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
+      <!-- Quick Access -->
+      <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-10">
+        <div class="bg-white/10 hover:bg-white/20 transition rounded-md flex items-center h-16 cursor-pointer group overflow-hidden">
+          <div class="h-16 w-16 bg-gradient-to-br from-purple-700 to-indigo-700 flex items-center justify-center flex-shrink-0">
+            <svg viewBox="0 0 24 24" class="h-7 w-7 fill-white"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
           </div>
-          <div class="flex-1 font-bold text-white px-4">Liked Songs</div>
-          <button class="bg-green-500 text-black h-12 w-12 rounded-full flex outline-none items-center justify-center opacity-0 group-hover:opacity-100 hover:scale-105 transition-all mr-4 shadow-xl">
-            <svg viewBox="0 0 16 16" class="h-5 w-5 fill-current ml-1"><path d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z"></path></svg>
-          </button>
+          <span class="font-bold text-white px-4 text-sm">Liked Songs</span>
+        </div>
+        <div class="bg-white/10 hover:bg-white/20 transition rounded-md flex items-center h-16 cursor-pointer group overflow-hidden">
+          <div class="h-16 w-16 bg-gradient-to-br from-green-700 to-teal-700 flex items-center justify-center flex-shrink-0">
+            <svg viewBox="0 0 24 24" class="h-7 w-7 fill-white"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+          </div>
+          <span class="font-bold text-white px-4 text-sm">Your Top Songs</span>
         </div>
       </div>
 
-      <!-- Featured Playlists (From Supabase Playlists Table) -->
-      <h2 class="text-2xl font-bold text-white mb-4 hover:underline cursor-pointer">Featured Playlists</h2>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 mb-10">
-        <div *ngFor="let playlist of featuredPlaylists" class="bg-[#181818] hover:bg-[#282828] p-4 rounded-md transition-colors cursor-pointer group">
-          <div class="aspect-square bg-neutral-800 rounded-md shadow-lg mb-4 relative overflow-hidden">
-            <!-- Mock Cover -->
-            <div class="w-full h-full bg-gradient-to-br from-neutral-700 to-neutral-900 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" class="h-12 w-12 text-neutral-500 fill-current opacity-50"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"></path></svg>
+      <!-- Featured Playlists -->
+      <section class="mb-10">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-white">Featured Playlists</h2>
+          <span class="text-sm text-neutral-400 hover:text-white cursor-pointer hover:underline">Show all</span>
+        </div>
+        <div *ngIf="isLoading" class="text-neutral-400 text-sm italic">Loading playlists...</div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+          <div *ngFor="let pl of featuredPlaylists"
+            class="bg-neutral-800 hover:bg-neutral-700 p-4 rounded-lg transition-colors cursor-pointer group relative">
+            <!-- Cover -->
+            <div class="aspect-square rounded-md mb-4 relative overflow-hidden bg-neutral-700 shadow-lg flex items-center justify-center">
+              <svg viewBox="0 0 24 24" class="h-12 w-12 fill-neutral-500"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+              <button class="absolute bottom-2 right-2 bg-green-500 text-black h-10 w-10 rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105 hover:bg-green-400">
+                <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current ml-0.5"><path d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z"/></svg>
+              </button>
             </div>
-            
-            <!-- Play Button Overlay -->
-            <button class="absolute bottom-2 right-2 bg-green-500 text-black h-12 w-12 rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105 hover:bg-green-400">
-              <svg viewBox="0 0 16 16" class="h-5 w-5 fill-current ml-1"><path d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z"></path></svg>
-            </button>
+            <h3 class="text-white font-semibold text-sm truncate">{{ pl.name }}</h3>
+            <p class="text-neutral-400 text-xs mt-1 line-clamp-2">{{ pl.description || 'By ' + (pl.users?.username || 'Unknown') }}</p>
           </div>
-          <h3 class="text-white font-bold mb-1 truncate">{{ playlist.name }}</h3>
-          <p class="text-neutral-400 text-sm line-clamp-2">{{ playlist.description || 'By ' + (playlist.users?.username || 'Unknown User') }}</p>
+          <p *ngIf="featuredPlaylists.length === 0 && !isLoading" class="text-neutral-500 italic text-sm col-span-full">No playlists found.</p>
         </div>
-        <div *ngIf="featuredPlaylists?.length === 0" class="text-neutral-500 italic col-span-full">No playlists found in database.</div>
-      </div>
+      </section>
 
-      <!-- Recent Songs (From Supabase Songs Table) -->
-      <h2 class="text-2xl font-bold text-white mb-4 hover:underline cursor-pointer">Recently Added Songs</h2>
-      <div class="flex flex-col mb-10 w-full overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+      <!-- Recent Songs Table -->
+      <section class="mb-10">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-white">Recently Added</h2>
+          <span class="text-sm text-neutral-400 hover:text-white cursor-pointer hover:underline">Show all</span>
+        </div>
+        <table class="w-full text-left">
           <thead>
-            <tr class="text-neutral-400 border-b border-neutral-800 text-sm">
-              <th class="w-12 pb-2 font-normal text-center">#</th>
-              <th class="pb-2 font-normal pl-2">Title</th>
-              <th class="pb-2 font-normal hidden md:table-cell">Album</th>
-              <th class="pb-2 font-normal text-right pr-4"><svg viewBox="0 0 16 16" class="h-4 w-4 fill-current inline"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8z"></path></svg></th>
+            <tr class="text-neutral-400 border-b border-neutral-800 text-xs uppercase tracking-wider">
+              <th class="w-8 pb-3 font-normal text-center">#</th>
+              <th class="pb-3 font-normal pl-3">Title</th>
+              <th class="pb-3 font-normal hidden md:table-cell">Album</th>
+              <th class="pb-3 font-normal hidden md:table-cell">Artist</th>
+              <th class="pb-3 font-normal text-right pr-4">
+                <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current inline-block"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8z"/></svg>
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let song of recentSongs; let i = index" class="hover:bg-white/10 group transition-colors rounded-md py-1">
-              <td class="w-12 text-center text-neutral-400 py-3 rounded-l-md">{{ i + 1 }}</td>
-              <td class="py-3 px-2">
-                <div class="text-white font-normal truncate group-hover:underline cursor-pointer block leading-tight">{{ song.title }}</div>
-                <div *ngIf="song.is_explicit" class="inline-block bg-neutral-400 text-black text-[10px] items-center justify-center px-1 rounded-sm mt-1 font-bold">E</div>
+            <tr *ngFor="let song of recentSongs; let i = index"
+              class="group hover:bg-white/5 transition rounded-md">
+              <td class="w-8 text-center text-neutral-400 py-3 text-sm">{{ i + 1 }}</td>
+              <td class="py-3 pl-3">
+                <div class="flex items-center gap-3">
+                  <div class="h-10 w-10 bg-neutral-800 rounded flex items-center justify-center flex-shrink-0">
+                    <svg viewBox="0 0 24 24" class="h-5 w-5 fill-neutral-500"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                  </div>
+                  <div>
+                    <div class="text-white text-sm font-medium">{{ song.title }}</div>
+                    <span *ngIf="song.is_explicit" class="text-[10px] bg-neutral-500 text-black font-bold px-1 rounded-sm">E</span>
+                  </div>
+                </div>
               </td>
-              <td class="py-3 text-neutral-400 text-sm hidden md:table-cell group-hover:text-white truncate cursor-pointer transition-colors max-w-[200px]">
-                {{ song.album_songs?.[0]?.albums?.title || 'Unknown Album' }}
+              <td class="py-3 text-neutral-400 text-sm hidden md:table-cell hover:text-white cursor-pointer transition truncate max-w-[180px]">
+                {{ song.album_songs?.[0]?.albums?.title || '—' }}
               </td>
-              <td class="py-3 text-neutral-400 text-sm text-right pr-4 rounded-r-md">
-                {{ formatDuration(song.duration_sec) }}
+              <td class="py-3 text-neutral-400 text-sm hidden md:table-cell hover:text-white cursor-pointer transition truncate max-w-[140px]">
+                {{ song.album_songs?.[0]?.albums?.artists?.stage_name || '—' }}
               </td>
-            </tr>
-            <tr *ngIf="recentSongs?.length === 0">
-              <td colspan="4" class="text-neutral-500 italic py-4">No songs found in database.</td>
+              <td class="py-3 text-neutral-400 text-sm text-right pr-4">{{ fmtDur(song.duration_sec) }}</td>
             </tr>
           </tbody>
         </table>
-      </div>
+      </section>
 
+      <!-- Artists Row -->
+      <section class="mb-10">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-white">Artists</h2>
+        </div>
+        <div class="flex gap-5 overflow-x-auto pb-3">
+          <div *ngFor="let artist of artists"
+            class="flex-shrink-0 w-40 text-center cursor-pointer group">
+            <div class="h-40 w-40 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-900 mx-auto mb-2 flex items-center justify-center group-hover:opacity-80 transition shadow-lg">
+              <svg viewBox="0 0 24 24" class="h-14 w-14 fill-neutral-500"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <p class="text-white text-sm font-semibold">{{ artist.stage_name }}</p>
+            <p class="text-neutral-400 text-xs mt-0.5">Artist</p>
+          </div>
+        </div>
+      </section>
     </div>
   `
 })
 export class DashboardComponent implements OnInit {
-  greeting = 'Good morning';
+  greeting = 'Good evening';
   featuredPlaylists: any[] = [];
   recentSongs: any[] = [];
+  artists: any[] = [];
+  isLoading = true;
 
-  constructor(private supabase: SupabaseService) {}
+  constructor(private supabase: SupabaseService, private authService: AuthService) {}
 
   async ngOnInit() {
     this.updateGreeting();
-    
     try {
-      this.featuredPlaylists = await this.supabase.getFeaturedPlaylists();
-      this.recentSongs = await this.supabase.getRecentSongs();
+      [this.featuredPlaylists, this.recentSongs, this.artists] = await Promise.all([
+        this.supabase.getFeaturedPlaylists(),
+        this.supabase.getRecentSongs(),
+        this.supabase.getAllArtists(),
+      ]);
     } catch (e) {
-      console.error("Error fetching dashboard data:", e);
+      console.error('Dashboard load error:', e);
+    } finally {
+      this.isLoading = false;
     }
   }
 
   updateGreeting() {
-    const hour = new Date().getHours();
-    if (hour < 12) this.greeting = 'Good morning';
-    else if (hour < 18) this.greeting = 'Good afternoon';
+    const h = new Date().getHours();
+    if (h < 12) this.greeting = 'Good morning';
+    else if (h < 18) this.greeting = 'Good afternoon';
     else this.greeting = 'Good evening';
   }
 
-  formatDuration(seconds: number): string {
-    if (!seconds) return '--:--';
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  fmtDur(s: number): string {
+    if (!s) return '--:--';
+    return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
   }
 }

@@ -9,18 +9,25 @@ import { PlayerComponent } from '../shared/player/player.component';
   standalone: true,
   imports: [RouterOutlet, SidebarComponent, TopbarComponent, PlayerComponent],
   template: `
-    <div class="flex h-screen bg-black text-white relative">
-      <app-sidebar class="w-64 flex-shrink-0 z-10"></app-sidebar>
-      <div class="flex flex-col flex-1 h-[calc(100vh-90px)] overflow-hidden">
-        <app-topbar class="h-16 flex-shrink-0 z-20"></app-topbar>
-        <main class="flex-1 overflow-y-auto bg-gradient-to-b from-neutral-800 to-black p-6">
+    <div class="flex h-screen bg-black text-white overflow-hidden">
+      <!-- Sidebar: fixed width -->
+      <aside class="w-60 flex-shrink-0 overflow-hidden">
+        <app-sidebar class="block h-full"></app-sidebar>
+      </aside>
+
+      <!-- Main area: flex column, takes remaining width -->
+      <div class="flex flex-col flex-1 overflow-hidden">
+        <app-topbar></app-topbar>
+        <main class="flex-1 overflow-y-auto bg-gradient-to-b from-neutral-800 via-neutral-900 to-black px-6 pt-2">
           <router-outlet></router-outlet>
         </main>
       </div>
-      <!-- Fixed Player at Bottom -->
-      <app-player class="h-[90px] w-full absolute bottom-0 left-0 bg-neutral-900 border-t border-neutral-800 z-30"></app-player>
+
+      <!-- Player pinned to bottom -->
+      <app-player
+        class="fixed bottom-0 left-0 right-0 h-24 z-50 bg-neutral-900 border-t border-neutral-800 flex items-center">
+      </app-player>
     </div>
-  `,
-  styles: ``
+  `
 })
 export class LayoutComponent {}
