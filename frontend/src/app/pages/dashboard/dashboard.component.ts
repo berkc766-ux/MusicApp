@@ -1,63 +1,145 @@
-import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
 import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
-  changeDetection: ChangeDetectionStrategy.Default,
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="pb-16">
-      <!-- Greeting -->
       <h2 class="text-3xl font-bold text-white mb-6">{{ greeting }}</h2>
 
       <!-- Quick Access -->
       <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-10">
-        <div class="bg-white/10 hover:bg-white/20 transition rounded-md flex items-center h-16 cursor-pointer group overflow-hidden">
+        <div class="bg-white/10 hover:bg-white/20 transition rounded-md flex items-center h-16 cursor-pointer overflow-hidden">
           <div class="h-16 w-16 bg-gradient-to-br from-purple-700 to-indigo-700 flex items-center justify-center flex-shrink-0">
             <svg viewBox="0 0 24 24" class="h-7 w-7 fill-white"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
           </div>
           <span class="font-bold text-white px-4 text-sm">Liked Songs</span>
         </div>
-        <div class="bg-white/10 hover:bg-white/20 transition rounded-md flex items-center h-16 cursor-pointer group overflow-hidden">
+        <div class="bg-white/10 hover:bg-white/20 transition rounded-md flex items-center h-16 cursor-pointer overflow-hidden"
+          (click)="showCreatePlaylist = true">
           <div class="h-16 w-16 bg-gradient-to-br from-green-700 to-teal-700 flex items-center justify-center flex-shrink-0">
-            <svg viewBox="0 0 24 24" class="h-7 w-7 fill-white"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+            <svg viewBox="0 0 24 24" class="h-7 w-7 fill-white"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           </div>
-          <span class="font-bold text-white px-4 text-sm">Your Top Songs</span>
+          <span class="font-bold text-white px-4 text-sm">Create Playlist</span>
         </div>
       </div>
 
-      <!-- Featured Playlists -->
+      <!-- Create Playlist Modal -->
+      <div *ngIf="showCreatePlaylist"
+        class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+        (click)="showCreatePlaylist = false">
+        <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+          (click)="$event.stopPropagation()">
+          <h3 class="text-xl font-bold text-white mb-4">Create Playlist</h3>
+          <div class="space-y-3">
+            <input type="text" [(ngModel)]="newPlaylistName" placeholder="Playlist name *"
+              class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-4 py-2.5 text-sm focus:outline-none focus:border-white transition"
+              autofocus>
+            <textarea [(ngModel)]="newPlaylistDesc" placeholder="Add description (optional)" rows="2"
+              class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-4 py-2.5 text-sm focus:outline-none focus:border-white transition resize-none"></textarea>
+            <div *ngIf="createPlaylistError" class="text-red-400 text-xs">{{ createPlaylistError }}</div>
+            <div class="flex gap-2 pt-1">
+              <button (click)="createPlaylist()" [disabled]="!newPlaylistName || creatingPlaylist"
+                class="bg-green-500 hover:bg-green-400 text-black font-bold px-5 py-2 rounded-full text-sm transition disabled:opacity-50">
+                {{ creatingPlaylist ? 'Creating...' : 'Create' }}
+              </button>
+              <button (click)="showCreatePlaylist = false"
+                class="text-neutral-400 hover:text-white px-4 py-2 text-sm transition">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Song to Playlist Modal -->
+      <div *ngIf="showAddSong"
+        class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+        (click)="showAddSong = false">
+        <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+          (click)="$event.stopPropagation()">
+          <h3 class="text-xl font-bold text-white mb-1">Add Songs</h3>
+          <p class="text-neutral-400 text-sm mb-4">to <span class="text-white font-semibold">{{ selectedPlaylistName }}</span></p>
+          <div class="mb-3">
+            <input type="text" [(ngModel)]="songSearch" placeholder="Search songs..."
+              class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-4 py-2 text-sm focus:outline-none focus:border-white">
+          </div>
+          <div class="max-h-72 overflow-y-auto space-y-1">
+            <div *ngFor="let song of filteredSongs"
+              (click)="addSong(song)"
+              class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 cursor-pointer transition group">
+              <span class="text-neutral-300 text-sm group-hover:text-white">{{ song.title }}</span>
+              <span class="text-green-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition">+ Add</span>
+            </div>
+            <p *ngIf="filteredSongs.length === 0" class="text-neutral-500 italic text-sm px-3 py-2">No songs found.</p>
+          </div>
+          <div *ngIf="addSongMsg" class="mt-3 text-sm" [class]="addSongSuccess ? 'text-green-400' : 'text-red-400'">{{ addSongMsg }}</div>
+          <button (click)="showAddSong = false" class="mt-4 text-neutral-400 hover:text-white text-sm transition">Done</button>
+        </div>
+      </div>
+
+      <!-- My Playlists -->
       <section class="mb-10">
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-white">Featured Playlists</h2>
-          <span class="text-sm text-neutral-400 hover:text-white cursor-pointer hover:underline">Show all</span>
+          <h2 class="text-2xl font-bold text-white">My Playlists</h2>
+          <button (click)="showCreatePlaylist = true"
+            class="text-green-400 hover:text-green-300 text-sm font-bold transition">
+            + New Playlist
+          </button>
         </div>
         <div *ngIf="isLoading" class="text-neutral-400 text-sm italic">Loading...</div>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-          <div *ngFor="let pl of featuredPlaylists"
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div *ngFor="let pl of myPlaylists"
             class="bg-neutral-800 hover:bg-neutral-700 p-4 rounded-lg transition-colors cursor-pointer group relative">
-            <div class="aspect-square rounded-md mb-4 relative overflow-hidden bg-neutral-700 shadow-lg flex items-center justify-center">
-              <svg viewBox="0 0 24 24" class="h-12 w-12 fill-neutral-500"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-              <button class="absolute bottom-2 right-2 bg-green-500 text-black h-10 w-10 rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105 hover:bg-green-400">
+            <div class="aspect-square rounded-md mb-3 bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center shadow-lg relative">
+              <svg viewBox="0 0 24 24" class="h-10 w-10 fill-white opacity-40"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+              <button (click)="$event.stopPropagation(); openAddSong(pl)"
+                class="absolute bottom-2 right-2 bg-green-500 text-black h-9 w-9 rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105">
                 <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current ml-0.5"><path d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z"/></svg>
               </button>
             </div>
-            <h3 class="text-white font-semibold text-sm truncate">{{ pl.name }}</h3>
-            <p class="text-neutral-400 text-xs mt-1 line-clamp-2">{{ pl.description || 'By ' + (pl.users?.username || 'Unknown') }}</p>
+            <a [routerLink]="['/playlist', pl.id]" class="block">
+              <h3 class="text-white font-semibold text-sm truncate">{{ pl.name }}</h3>
+              <p class="text-neutral-400 text-xs mt-0.5">{{ pl.playlist_songs?.[0]?.count ?? 0 }} songs</p>
+            </a>
+            <button (click)="$event.stopPropagation(); openAddSong(pl)"
+              class="mt-2 w-full text-xs text-neutral-400 hover:text-green-400 transition text-left">
+              + Add songs
+            </button>
           </div>
         </div>
-        <p *ngIf="!isLoading && featuredPlaylists.length === 0" class="text-neutral-500 italic text-sm mt-2">No playlists in database yet.</p>
+        <p *ngIf="!isLoading && myPlaylists.length === 0"
+          class="text-neutral-500 italic text-sm mt-2">
+          No playlists yet.
+          <button (click)="showCreatePlaylist = true" class="text-green-400 hover:underline ml-1">Create your first!</button>
+        </p>
       </section>
 
-      <!-- Recent Songs Table -->
+      <!-- Featured Playlists -->
       <section class="mb-10">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-white">Recently Added</h2>
-          <span class="text-sm text-neutral-400 hover:text-white cursor-pointer hover:underline">Show all</span>
+        <h2 class="text-2xl font-bold text-white mb-4">Featured Playlists</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <a *ngFor="let pl of featuredPlaylists" [routerLink]="['/playlist', pl.id]"
+            class="bg-neutral-800 hover:bg-neutral-700 p-4 rounded-lg transition-colors cursor-pointer group no-underline">
+            <div class="aspect-square rounded-md mb-3 bg-neutral-700 flex items-center justify-center shadow-lg">
+              <svg viewBox="0 0 24 24" class="h-10 w-10 fill-neutral-500"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+            </div>
+            <h3 class="text-white font-semibold text-sm truncate">{{ pl.name }}</h3>
+            <p class="text-neutral-400 text-xs mt-0.5 truncate">{{ pl.description || ('By ' + (pl.users?.username || 'Unknown')) }}</p>
+          </a>
         </div>
+        <p *ngIf="!isLoading && featuredPlaylists.length === 0" class="text-neutral-500 italic text-sm mt-2">No featured playlists yet.</p>
+      </section>
+
+      <!-- Recently Added Songs -->
+      <section class="mb-10">
+        <h2 class="text-2xl font-bold text-white mb-4">Recently Added</h2>
         <div *ngIf="isLoading" class="text-neutral-400 text-sm italic">Loading...</div>
         <table *ngIf="!isLoading" class="w-full text-left">
           <thead>
@@ -66,14 +148,12 @@ import { AuthService } from '../../services/auth';
               <th class="pb-3 font-normal pl-3">Title</th>
               <th class="pb-3 font-normal hidden md:table-cell">Album</th>
               <th class="pb-3 font-normal hidden md:table-cell">Artist</th>
-              <th class="pb-3 font-normal text-right pr-4">
-                <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current inline-block"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8z"/></svg>
-              </th>
+              <th class="pb-3 font-normal text-right pr-4">⏱</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let song of recentSongs; let i = index"
-              class="group hover:bg-white/5 transition rounded-md">
+              class="group hover:bg-white/5 transition cursor-pointer">
               <td class="w-8 text-center text-neutral-400 py-3 text-sm">{{ i + 1 }}</td>
               <td class="py-3 pl-3">
                 <div class="flex items-center gap-3">
@@ -86,10 +166,10 @@ import { AuthService } from '../../services/auth';
                   </div>
                 </div>
               </td>
-              <td class="py-3 text-neutral-400 text-sm hidden md:table-cell hover:text-white cursor-pointer transition truncate max-w-[180px]">
+              <td class="py-3 text-neutral-400 text-sm hidden md:table-cell truncate max-w-[180px]">
                 {{ song.album_songs?.[0]?.albums?.title || '—' }}
               </td>
-              <td class="py-3 text-neutral-400 text-sm hidden md:table-cell hover:text-white cursor-pointer transition truncate max-w-[140px]">
+              <td class="py-3 text-neutral-400 text-sm hidden md:table-cell truncate max-w-[140px]">
                 {{ song.album_songs?.[0]?.albums?.artists?.stage_name || '—' }}
               </td>
               <td class="py-3 text-neutral-400 text-sm text-right pr-4">{{ fmtDur(song.duration_sec) }}</td>
@@ -99,22 +179,18 @@ import { AuthService } from '../../services/auth';
         <p *ngIf="!isLoading && recentSongs.length === 0" class="text-neutral-500 italic text-sm mt-2">No songs in database yet.</p>
       </section>
 
-      <!-- Artists Row -->
+      <!-- Artists -->
       <section class="mb-10">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-white">Artists</h2>
-        </div>
-        <div *ngIf="isLoading" class="text-neutral-400 text-sm italic">Loading...</div>
+        <h2 class="text-2xl font-bold text-white mb-4">Artists</h2>
         <div *ngIf="!isLoading" class="flex gap-5 overflow-x-auto pb-3">
-          <div *ngFor="let artist of artists"
-            class="flex-shrink-0 w-40 text-center cursor-pointer group">
-            <div class="h-40 w-40 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-900 mx-auto mb-2 flex items-center justify-center group-hover:opacity-80 transition shadow-lg">
-              <svg viewBox="0 0 24 24" class="h-14 w-14 fill-neutral-500"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          <div *ngFor="let artist of artists" class="flex-shrink-0 w-36 text-center cursor-pointer group">
+            <div class="h-36 w-36 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-900 mx-auto mb-2 flex items-center justify-center group-hover:opacity-80 transition shadow-lg">
+              <svg viewBox="0 0 24 24" class="h-12 w-12 fill-neutral-500"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </div>
-            <p class="text-white text-sm font-semibold">{{ artist.stage_name }}</p>
+            <p class="text-white text-sm font-semibold truncate">{{ artist.stage_name }}</p>
             <p class="text-neutral-400 text-xs mt-0.5">Artist</p>
           </div>
-          <p *ngIf="artists.length === 0" class="text-neutral-500 italic text-sm">No artists in database yet.</p>
+          <p *ngIf="artists.length === 0" class="text-neutral-500 italic text-sm">No artists yet.</p>
         </div>
       </section>
     </div>
@@ -123,9 +199,30 @@ import { AuthService } from '../../services/auth';
 export class DashboardComponent implements OnInit {
   greeting = 'Good evening';
   featuredPlaylists: any[] = [];
+  myPlaylists: any[] = [];
   recentSongs: any[] = [];
+  allSongs: any[] = [];
   artists: any[] = [];
   isLoading = true;
+
+  showCreatePlaylist = false;
+  newPlaylistName = '';
+  newPlaylistDesc = '';
+  creatingPlaylist = false;
+  createPlaylistError = '';
+
+  showAddSong = false;
+  selectedPlaylistId = 0;
+  selectedPlaylistName = '';
+  songSearch = '';
+  addSongMsg = '';
+  addSongSuccess = false;
+
+  get filteredSongs() {
+    if (!this.songSearch.trim()) return this.allSongs;
+    const q = this.songSearch.toLowerCase();
+    return this.allSongs.filter(s => s.title.toLowerCase().includes(q));
+  }
 
   constructor(
     private supabase: SupabaseService,
@@ -135,21 +232,68 @@ export class DashboardComponent implements OnInit {
 
   async ngOnInit() {
     this.updateGreeting();
+    const user = this.authService.getCurrentUser();
     try {
-      const [playlists, songs, artists] = await Promise.all([
+      const [playlists, featured, songs, artists, allSongs] = await Promise.all([
+        user ? this.supabase.getUserPlaylists(user.id) : Promise.resolve([]),
         this.supabase.getFeaturedPlaylists(),
         this.supabase.getRecentSongs(),
         this.supabase.getAllArtists(),
+        this.supabase.getAllSongs(),
       ]);
-      this.featuredPlaylists = playlists;
+      this.myPlaylists = playlists;
+      this.featuredPlaylists = featured;
       this.recentSongs = songs;
       this.artists = artists;
+      this.allSongs = allSongs;
     } catch (e) {
       console.error('Dashboard load error:', e);
     } finally {
       this.isLoading = false;
-      this.cdr.detectChanges(); // Force Angular to re-render after async data
+      this.cdr.detectChanges();
     }
+  }
+
+  async createPlaylist() {
+    const user = this.authService.getCurrentUser();
+    if (!user || !this.newPlaylistName) return;
+    this.creatingPlaylist = true;
+    this.createPlaylistError = '';
+    try {
+      await this.supabase.createPlaylist(user.id, this.newPlaylistName, this.newPlaylistDesc);
+      this.myPlaylists = await this.supabase.getUserPlaylists(user.id);
+      this.showCreatePlaylist = false;
+      this.newPlaylistName = '';
+      this.newPlaylistDesc = '';
+    } catch (e: any) {
+      this.createPlaylistError = e?.message || 'Failed to create playlist.';
+    }
+    this.creatingPlaylist = false;
+    this.cdr.detectChanges();
+  }
+
+  openAddSong(playlist: any) {
+    this.selectedPlaylistId = playlist.id;
+    this.selectedPlaylistName = playlist.name;
+    this.songSearch = '';
+    this.addSongMsg = '';
+    this.showAddSong = true;
+  }
+
+  async addSong(song: any) {
+    this.addSongMsg = '';
+    try {
+      await this.supabase.addSongToPlaylist(this.selectedPlaylistId, song.id);
+      this.addSongSuccess = true;
+      this.addSongMsg = `"${song.title}" added!`;
+      // Refresh my playlists song count
+      const user = this.authService.getCurrentUser();
+      if (user) this.myPlaylists = await this.supabase.getUserPlaylists(user.id);
+    } catch (e: any) {
+      this.addSongSuccess = false;
+      this.addSongMsg = e?.message || 'Failed to add song.';
+    }
+    this.cdr.detectChanges();
   }
 
   updateGreeting() {

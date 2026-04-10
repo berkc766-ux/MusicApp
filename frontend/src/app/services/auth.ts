@@ -3,14 +3,11 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { SupabaseService } from './supabase';
 import { Router } from '@angular/router';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<any>(null);
   public currentUser$: Observable<any> = this.currentUserSubject.asObservable();
 
-  // Critical fix: track whether session check completed
   private sessionLoaded = false;
   private sessionLoadedSubject = new BehaviorSubject<boolean>(false);
   public sessionLoaded$: Observable<boolean> = this.sessionLoadedSubject.asObservable();
@@ -24,11 +21,8 @@ export class AuthService {
     if (storedUserId) {
       try {
         const user = await this.supabase.getUserById(parseInt(storedUserId));
-        if (user) {
-          this.currentUserSubject.next(user);
-        } else {
-          localStorage.removeItem('spotify_clone_user_id');
-        }
+        if (user) this.currentUserSubject.next(user);
+        else localStorage.removeItem('spotify_clone_user_id');
       } catch (e) {
         localStorage.removeItem('spotify_clone_user_id');
       }
@@ -41,12 +35,16 @@ export class AuthService {
     if (this.sessionLoaded) return;
     return new Promise(resolve => {
       const sub = this.sessionLoaded$.subscribe(loaded => {
-        if (loaded) {
-          sub.unsubscribe();
-          resolve();
-        }
+        if (loaded) { sub.unsubscribe(); resolve(); }
       });
     });
+  }
+
+  /** Navigate to the correct home based on role */
+  private navigateByRole(role: string) {
+    if (role === 'admin') this.router.navigate(['/admin']);
+    else if (role === 'artist') this.router.navigate(['/artist-dashboard']);
+    else this.router.navigate(['/dashboard']);
   }
 
   async login(email: string, password: string): Promise<boolean> {
@@ -55,7 +53,7 @@ export class AuthService {
       if (user) {
         localStorage.setItem('spotify_clone_user_id', user.id.toString());
         this.currentUserSubject.next(user);
-        this.router.navigate(['/dashboard']);
+        this.navigateByRole(user.role);
         return true;
       }
       return false;
@@ -71,12 +69,27 @@ export class AuthService {
     password: string;
     firstName: string;
     lastName: string;
+    role?: string;
+    stageName?: string;
   }): Promise<{ success: boolean; error?: string }> {
     try {
-      const user = await this.supabase.registerUser(data);
+      const user = await this.supabase.registerUser({
+        username: data.username,
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: data.role || 'user',
+      });
+
+      // If registering as artist, also create an artists record
+      if (data.role === 'artist' && data.stageName) {
+        await this.supabase.registerArtist(user.id, data.stageName, `${data.firstName} ${data.lastName}`, '');
+      }
+
       localStorage.setItem('spotify_clone_user_id', user.id.toString());
       this.currentUserSubject.next(user);
-      this.router.navigate(['/dashboard']);
+      this.navigateByRole(user.role);
       return { success: true };
     } catch (e: any) {
       return { success: false, error: e?.message || 'Registration failed.' };
@@ -95,5 +108,9 @@ export class AuthService {
 
   getCurrentUser() {
     return this.currentUserSubject.value;
+  }
+
+  getUserRole(): string {
+    return this.currentUserSubject.value?.role || 'user';
   }
 }
