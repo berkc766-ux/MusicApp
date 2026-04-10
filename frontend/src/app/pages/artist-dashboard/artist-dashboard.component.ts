@@ -20,9 +20,37 @@ import { AuthService } from '../../services/auth';
           <h1 class="text-4xl font-bold text-white mb-1">{{ artist?.stage_name || user?.username }}</h1>
           <p class="text-neutral-400 text-sm">{{ artist?.real_name || (user?.first_name + ' ' + user?.last_name) }}</p>
           <p *ngIf="artist?.bio" class="text-neutral-500 text-xs mt-1 max-w-md">{{ artist.bio }}</p>
-          <p *ngIf="!artist" class="text-yellow-400 text-xs mt-2 bg-yellow-500/10 border border-yellow-500/30 px-3 py-1.5 rounded-lg">
-            ⚠️ Artist profile not linked. Make sure the <code>user_id</code> column exists in the artists table.
-          </p>
+
+          <!-- No artist profile linked yet → show setup form -->
+          <div *ngIf="!artist && !loading" class="mt-3 bg-yellow-500/10 border border-yellow-500/40 rounded-xl p-4 max-w-md">
+            <p class="text-yellow-400 font-semibold text-sm mb-1">⚠️ Artist profile not linked</p>
+            <p class="text-yellow-300/70 text-xs mb-3">
+              Your account is registered as an artist but no artist profile is connected.<br>
+              Create your profile below, or run the SQL migration first.
+            </p>
+            <div *ngIf="!showProfileSetup">
+              <button (click)="showProfileSetup = true"
+                class="bg-yellow-500 text-black text-sm font-bold px-4 py-2 rounded-full hover:bg-yellow-400 transition">
+                + Create Artist Profile
+              </button>
+            </div>
+            <div *ngIf="showProfileSetup" class="space-y-2">
+              <input type="text" [(ngModel)]="profileStageName" placeholder="Stage name *"
+                class="w-full bg-neutral-800 border border-yellow-600 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-yellow-400">
+              <input type="text" [(ngModel)]="profileRealName" placeholder="Real name (optional)"
+                class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white">
+              <textarea [(ngModel)]="profileBio" placeholder="Bio (optional)" rows="2"
+                class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white resize-none"></textarea>
+              <div class="flex gap-2">
+                <button (click)="createArtistProfile()" [disabled]="!profileStageName || savingProfile"
+                  class="bg-yellow-500 text-black text-sm font-bold px-4 py-2 rounded-full hover:bg-yellow-400 transition disabled:opacity-50">
+                  {{ savingProfile ? 'Saving...' : 'Save Profile' }}
+                </button>
+                <button (click)="showProfileSetup = false" class="text-neutral-400 hover:text-white text-sm px-3 py-2 transition">Cancel</button>
+              </div>
+              <p *ngIf="profileMsg" class="text-xs" [class]="profileSuccess ? 'text-green-400' : 'text-red-400'">{{ profileMsg }}</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -168,6 +196,15 @@ export class ArtistDashboardComponent implements OnInit {
   songMsg = '';
   songSuccess = false;
 
+  // Profile setup (when no artist record linked)
+  showProfileSetup = false;
+  profileStageName = '';
+  profileRealName = '';
+  profileBio = '';
+  savingProfile = false;
+  profileMsg = '';
+  profileSuccess = false;
+
   get totalSongs() {
     return this.albums.reduce((acc, al) => acc + (al.album_songs?.length || 0), 0);
   }
@@ -186,9 +223,32 @@ export class ArtistDashboardComponent implements OnInit {
         if (this.artist) {
           this.albums = await this.supabase.getAlbumsByArtist(this.artist.id);
         }
-      } catch (e) { console.error(e); }
+      } catch (e) { console.error('ngOnInit error:', e); }
     }
     this.loading = false;
+    this.cdr.detectChanges();
+  }
+
+  async createArtistProfile() {
+    if (!this.user || !this.profileStageName) return;
+    this.savingProfile = true;
+    this.profileMsg = '';
+    try {
+      this.artist = await this.supabase.registerArtist(
+        this.user.id,
+        this.profileStageName,
+        this.profileRealName || `${this.user.first_name} ${this.user.last_name}`,
+        this.profileBio
+      );
+      this.profileSuccess = true;
+      this.profileMsg = 'Artist profile created successfully!';
+      this.showProfileSetup = false;
+      this.albums = await this.supabase.getAlbumsByArtist(this.artist.id);
+    } catch (e: any) {
+      this.profileSuccess = false;
+      this.profileMsg = e?.message || 'Failed to create profile. Make sure the SQL migration has been run.';
+    }
+    this.savingProfile = false;
     this.cdr.detectChanges();
   }
 

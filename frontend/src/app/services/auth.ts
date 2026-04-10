@@ -71,7 +71,7 @@ export class AuthService {
     lastName: string;
     role?: string;
     stageName?: string;
-  }): Promise<{ success: boolean; error?: string }> {
+  }): Promise<{ success: boolean; error?: string; artistLinkError?: string }> {
     try {
       const user = await this.supabase.registerUser({
         username: data.username,
@@ -82,13 +82,28 @@ export class AuthService {
         role: data.role || 'user',
       });
 
-      // If registering as artist, also create an artists record
-      if (data.role === 'artist' && data.stageName) {
-        await this.supabase.registerArtist(user.id, data.stageName, `${data.firstName} ${data.lastName}`, '');
-      }
-
       localStorage.setItem('spotify_clone_user_id', user.id.toString());
       this.currentUserSubject.next(user);
+
+      // Attempt artist profile creation separately — don't block login if it fails
+      if (data.role === 'artist' && data.stageName) {
+        try {
+          await this.supabase.registerArtist(
+            user.id,
+            data.stageName,
+            `${data.firstName} ${data.lastName}`,
+            ''
+          );
+        } catch (artistErr: any) {
+          // Log in user but report the artist link failed
+          this.navigateByRole(user.role);
+          return {
+            success: true,
+            artistLinkError: `Account created, but artist profile could not be linked: ${artistErr?.message}. Please run the SQL migration and create your profile from the dashboard.`
+          };
+        }
+      }
+
       this.navigateByRole(user.role);
       return { success: true };
     } catch (e: any) {

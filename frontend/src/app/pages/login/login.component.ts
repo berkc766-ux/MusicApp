@@ -151,6 +151,7 @@ export class LoginComponent {
   signupStageName = '';
 
   error = '';
+  artistLinkWarning = '';
   loading = false;
 
   constructor(private authService: AuthService) {}
@@ -166,6 +167,7 @@ export class LoginComponent {
 
   async onSignUp() {
     this.error = '';
+    this.artistLinkWarning = '';
     if (!this.signupUsername || !this.signupEmail || !this.signupPassword || !this.signupFirstName) {
       this.error = 'Please fill in all required fields.'; return;
     }
@@ -182,7 +184,11 @@ export class LoginComponent {
       role: this.mode === 'signup-artist' ? 'artist' : 'user',
       stageName: this.signupStageName,
     });
-    if (!result.success) this.error = result.error || 'Registration failed.';
+    if (!result.success) {
+      this.error = result.error || 'Registration failed.';
+    } else if (result.artistLinkError) {
+      this.artistLinkWarning = result.artistLinkError;
+    }
     this.loading = false;
   }
 }
