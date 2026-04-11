@@ -11,7 +11,7 @@ import { AuthService } from '../../services/auth';
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="pb-16">
-      <h2 class="text-3xl font-bold text-white mb-6">{{ greeting }}</h2>
+      <h2 class="text-3xl font-bold text-white mb-6">{{ greeting }}, <span class="text-green-400">{{ userName }}</span> 👋</h2>
 
       <!-- Quick Access -->
       <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-10">
@@ -131,7 +131,16 @@ import { AuthService } from '../../services/auth';
               <svg viewBox="0 0 24 24" class="h-10 w-10 fill-neutral-500"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
             </div>
             <h3 class="text-white font-semibold text-sm truncate">{{ pl.name }}</h3>
-            <p class="text-neutral-400 text-xs mt-0.5 truncate">{{ pl.description || ('By ' + (pl.users?.username || 'Unknown')) }}</p>
+            <p class="text-neutral-400 text-xs mt-0.5 truncate">
+              <span *ngIf="pl.description">{{ pl.description }}</span>
+              <span *ngIf="!pl.description">By
+                <a *ngIf="pl.users?.id" [routerLink]="['/user', pl.users?.id]"
+                  class="hover:text-green-400 transition" (click)="$event.stopPropagation()">
+                  {{ pl.users?.username || 'Unknown' }}
+                </a>
+                <span *ngIf="!pl.users?.id">{{ pl.users?.username || 'Unknown' }}</span>
+              </span>
+            </p>
           </a>
         </div>
         <p *ngIf="!isLoading && featuredPlaylists.length === 0" class="text-neutral-500 italic text-sm mt-2">No featured playlists yet.</p>
@@ -183,13 +192,14 @@ import { AuthService } from '../../services/auth';
       <section class="mb-10">
         <h2 class="text-2xl font-bold text-white mb-4">Artists</h2>
         <div *ngIf="!isLoading" class="flex gap-5 overflow-x-auto pb-3">
-          <div *ngFor="let artist of artists" class="flex-shrink-0 w-36 text-center cursor-pointer group">
+          <a *ngFor="let artist of artists" [routerLink]="['/artist', artist.id]"
+            class="flex-shrink-0 w-36 text-center cursor-pointer group no-underline">
             <div class="h-36 w-36 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-900 mx-auto mb-2 flex items-center justify-center group-hover:opacity-80 transition shadow-lg">
               <svg viewBox="0 0 24 24" class="h-12 w-12 fill-neutral-500"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </div>
-            <p class="text-white text-sm font-semibold truncate">{{ artist.stage_name }}</p>
+            <p class="text-white text-sm font-semibold truncate group-hover:text-green-400 transition">{{ artist.stage_name }}</p>
             <p class="text-neutral-400 text-xs mt-0.5">Artist</p>
-          </div>
+          </a>
           <p *ngIf="artists.length === 0" class="text-neutral-500 italic text-sm">No artists yet.</p>
         </div>
       </section>
@@ -198,6 +208,7 @@ import { AuthService } from '../../services/auth';
 })
 export class DashboardComponent implements OnInit {
   greeting = 'Good evening';
+  userName = '';
   featuredPlaylists: any[] = [];
   myPlaylists: any[] = [];
   recentSongs: any[] = [];
@@ -233,6 +244,7 @@ export class DashboardComponent implements OnInit {
   async ngOnInit() {
     this.updateGreeting();
     const user = this.authService.getCurrentUser();
+    this.userName = user?.first_name || user?.username || '';
     try {
       const [playlists, featured, songs, artists, allSongs] = await Promise.all([
         user ? this.supabase.getUserPlaylists(user.id) : Promise.resolve([]),

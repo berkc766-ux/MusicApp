@@ -37,10 +37,16 @@ import { AuthService } from '../../services/auth';
               Your Library
             </a>
           </li>
+          <li>
+            <a routerLink="/search" routerLinkActive="bg-neutral-800 text-white"
+              class="flex items-center gap-4 px-3 py-2.5 rounded-md transition-colors hover:text-white font-semibold text-sm">
+              <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current flex-shrink-0"><path d="M10.533 1.279c-5.18 0-9.407 4.927-9.407 10.107C1.126 16.514 5.353 20 10.533 20c1.97 0 3.806-.518 5.395-1.463l4.547 4.364a1 1 0 0 0 1.395-1.435l-4.516-4.333C18.324 15.5 19.94 12.864 19.94 11.386c0-5.18-4.228-10.107-9.407-10.107zm0 2c4.176 0 7.407 3.834 7.407 8.107 0 4.272-3.231 7.614-7.407 7.614-4.176 0-7.407-3.342-7.407-7.614 0-4.273 3.231-8.107 7.407-8.107z"/></svg>
+              Search
+            </a>
+          </li>
         </ul>
       </nav>
 
-      <!-- Nav: ARTIST -->
       <nav *ngIf="role === 'artist'" class="px-3 mb-4">
         <ul class="space-y-1">
           <li>
@@ -57,10 +63,16 @@ import { AuthService } from '../../services/auth';
               Browse
             </a>
           </li>
+          <li>
+            <a routerLink="/search" routerLinkActive="bg-neutral-800 text-white"
+              class="flex items-center gap-4 px-3 py-2.5 rounded-md transition-colors hover:text-white font-semibold text-sm">
+              <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current flex-shrink-0"><path d="M10.533 1.279c-5.18 0-9.407 4.927-9.407 10.107C1.126 16.514 5.353 20 10.533 20c1.97 0 3.806-.518 5.395-1.463l4.547 4.364a1 1 0 0 0 1.395-1.435l-4.516-4.333C18.324 15.5 19.94 12.864 19.94 11.386c0-5.18-4.228-10.107-9.407-10.107zm0 2c4.176 0 7.407 3.834 7.407 8.107 0 4.272-3.231 7.614-7.407 7.614-4.176 0-7.407-3.342-7.407-7.614 0-4.273 3.231-8.107 7.407-8.107z"/></svg>
+              Search
+            </a>
+          </li>
         </ul>
       </nav>
 
-      <!-- Nav: ADMIN -->
       <nav *ngIf="role === 'admin'" class="px-3 mb-4">
         <ul class="space-y-1">
           <li>
@@ -77,12 +89,18 @@ import { AuthService } from '../../services/auth';
               Browse
             </a>
           </li>
+          <li>
+            <a routerLink="/search" routerLinkActive="bg-neutral-800 text-white"
+              class="flex items-center gap-4 px-3 py-2.5 rounded-md transition-colors hover:text-white font-semibold text-sm">
+              <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current flex-shrink-0"><path d="M10.533 1.279c-5.18 0-9.407 4.927-9.407 10.107C1.126 16.514 5.353 20 10.533 20c1.97 0 3.806-.518 5.395-1.463l4.547 4.364a1 1 0 0 0 1.395-1.435l-4.516-4.333C18.324 15.5 19.94 12.864 19.94 11.386c0-5.18-4.228-10.107-9.407-10.107zm0 2c4.176 0 7.407 3.834 7.407 8.107 0 4.272-3.231 7.614-7.407 7.614-4.176 0-7.407-3.342-7.407-7.614 0-4.273 3.231-8.107 7.407-8.107z"/></svg>
+              Search
+            </a>
+          </li>
         </ul>
       </nav>
 
-      <div class="border-t border-neutral-800 mx-3 my-2"></div>
-
       <!-- Playlists (listener & admin only) -->
+
       <div *ngIf="role !== 'artist'" class="flex-1 overflow-y-auto px-3 scrollbar-thin">
         <div class="px-3 py-2 mt-2">
           <h3 class="text-xs uppercase tracking-widest font-bold text-neutral-500">Playlists</h3>

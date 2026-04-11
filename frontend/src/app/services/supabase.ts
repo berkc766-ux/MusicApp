@@ -63,6 +63,16 @@ export class SupabaseService {
     return data;
   }
 
+  async getArtistById(artistId: number) {
+    const { data, error } = await this.supabase
+      .from('artists')
+      .select('id, stage_name, real_name, bio, formation_year, user_id, albums(id, title, release_year, record_label, type, album_songs(songs(id, title, duration_sec, is_explicit)))')
+      .eq('id', artistId)
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
   async getArtistByUserId(userId: number) {
     const { data, error } = await this.supabase
       .from('artists')
@@ -81,6 +91,49 @@ export class SupabaseService {
       .single();
     if (error) throw error;
     return data;
+  }
+
+  async getPlaylistById(playlistId: number) {
+    const { data, error } = await this.supabase
+      .from('playlists')
+      .select('id, name, description, creation_date, user_id, users!user_id(id, username)')
+      .eq('id', playlistId)
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
+  async deletePlaylist(playlistId: number) {
+    await this.supabase.from('playlist_songs').delete().eq('playlist_id', playlistId);
+    await this.supabase.from('shared_playlists').delete().eq('playlist_id', playlistId);
+    const { error } = await this.supabase.from('playlists').delete().eq('id', playlistId);
+    if (error) throw error;
+  }
+
+  async getPublicPlaylists(userId: number) {
+    const { data, error } = await this.supabase
+      .from('playlists')
+      .select('id, name, description, creation_date, playlist_songs(count)')
+      .eq('user_id', userId)
+      .order('creation_date', { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async searchAll(query: string) {
+    const q = `%${query}%`;
+    const [songs, artists, albums, playlists] = await Promise.all([
+      this.supabase.from('songs').select('id, title, duration_sec, is_explicit, album_songs(albums(id, title, artists!artist_id(id, stage_name)))').ilike('title', q).limit(10),
+      this.supabase.from('artists').select('id, stage_name, real_name, bio').ilike('stage_name', q).limit(8),
+      this.supabase.from('albums').select('id, title, release_year, type, artists!artist_id(id, stage_name)').ilike('title', q).limit(8),
+      this.supabase.from('playlists').select('id, name, description, users!user_id(id, username)').ilike('name', q).limit(8),
+    ]);
+    return {
+      songs: songs.data ?? [],
+      artists: artists.data ?? [],
+      albums: albums.data ?? [],
+      playlists: playlists.data ?? [],
+    };
   }
 
   // ─── DASHBOARD: Featured Content ──────────────────────────────────────────
