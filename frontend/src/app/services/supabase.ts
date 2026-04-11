@@ -569,7 +569,8 @@ export class SupabaseService {
       return [];
     }
     return data ?? [];
-  
+  }
+
   async updateArtistFormationYear(artistId: number, year: number) {
     const { error } = await this.supabase
       .from('artists').update({ formation_year: year }).eq('id', artistId);
