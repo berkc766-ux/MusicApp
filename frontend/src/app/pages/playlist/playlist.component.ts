@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -226,7 +226,7 @@ import { AuthService } from '../../services/auth';
     </div>
   `
 })
-export class PlaylistComponent implements OnInit {
+export class PlaylistComponent implements OnInit, OnDestroy {
   playlistId = 0;
   playlist: any = null;
   songs: any[] = [];
@@ -236,6 +236,7 @@ export class PlaylistComponent implements OnInit {
   loading = true;
   isOwner = false;
   currentUser: any = null;
+  private routeSub: any;
 
   showDeleteConfirm = false;
   deleting = false;
@@ -277,8 +278,22 @@ export class PlaylistComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    this.playlistId = parseInt(this.route.snapshot.paramMap.get('id') || '0');
     this.currentUser = this.authService.getCurrentUser();
+    this.routeSub = this.route.paramMap.subscribe(async params => {
+      this.playlistId = parseInt(params.get('id') || '0');
+      await this.loadPlaylist();
+    });
+  }
+
+  ngOnDestroy() {
+    this.routeSub?.unsubscribe();
+  }
+
+  private async loadPlaylist() {
+    this.loading = true;
+    this.playlist = null;
+    this.songs = [];
+    this.cdr.detectChanges();
     try {
       const [playlist, songs, allSongs, allUsers, likedIds] = await Promise.all([
         this.supabase.getPlaylistById(this.playlistId),
