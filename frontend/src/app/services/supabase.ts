@@ -215,8 +215,8 @@ export class SupabaseService {
   async getRecentSongs() {
     const { data, error } = await this.supabase
       .from('songs')
-      .select('id, title, duration_sec, is_explicit, album_songs(albums(id, title, artists!artist_id(stage_name)))')
-      .limit(10);
+      .select('id, title, duration_sec, is_explicit, album_songs(albums(id, title, artists!artist_id(id, stage_name)))')
+      .limit(15);
     if (error) {
       console.warn('getRecentSongs error:', error.message);
       return [];

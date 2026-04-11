@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
+import { AuthService } from '../../services/auth';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
@@ -102,6 +103,7 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
                 <th class="pb-3 font-normal hidden md:table-cell">Album</th>
                 <th class="pb-3 font-normal hidden md:table-cell">Artist</th>
                 <th class="pb-3 font-normal text-right pr-4">⏱</th>
+                <th class="w-8"></th>
               </tr>
             </thead>
             <tbody>
@@ -132,7 +134,19 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
                   </a>
                   <span *ngIf="!song.album_songs?.[0]?.albums?.artists">—</span>
                 </td>
-                <td class="py-3 text-neutral-400 text-sm text-right pr-4">{{ fmtDur(song.duration_sec) }}</td>
+                <td class="py-3 text-neutral-400 text-sm text-right pr-2">{{ fmtDur(song.duration_sec) }}</td>
+                <!-- Like button -->
+                <td class="py-3 pr-3 text-center">
+                  <button (click)="toggleLike(song.id)"
+                    [class]="likedIds.has(song.id)
+                      ? 'text-red-400 hover:text-red-300 transition'
+                      : 'text-neutral-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition'"
+                    title="{{ likedIds.has(song.id) ? 'Unlike' : 'Like' }}">
+                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -209,6 +223,8 @@ export class SearchComponent implements OnInit, OnDestroy {
   results: { songs: any[]; artists: any[]; albums: any[]; playlists: any[] } = {
     songs: [], artists: [], albums: [], playlists: []
   };
+  likedIds = new Set<number>();
+  currentUser: any = null;
 
   private searchSubject = new Subject<string>();
   private subscription: any;
@@ -224,12 +240,18 @@ export class SearchComponent implements OnInit, OnDestroy {
 
   constructor(
     private supabase: SupabaseService,
+    private authService: AuthService,
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
+    this.currentUser = this.authService.getCurrentUser();
+    if (this.currentUser) {
+      this.likedIds = await this.supabase.getLikedSongIds(this.currentUser.id);
+    }
+
     // Read query param on load
     this.route.queryParamMap.subscribe(params => {
       const q = params.get('q') || '';
@@ -245,7 +267,6 @@ export class SearchComponent implements OnInit, OnDestroy {
       distinctUntilChanged()
     ).subscribe(q => {
       this.doSearch(q);
-      // Update URL without navigating
       this.router.navigate([], {
         relativeTo: this.route,
         queryParams: q.trim() ? { q } : {},
@@ -267,6 +288,21 @@ export class SearchComponent implements OnInit, OnDestroy {
     this.searchQuery = '';
     this.results = { songs: [], artists: [], albums: [], playlists: [] };
     this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+  }
+
+  async toggleLike(songId: number) {
+    if (!songId || !this.currentUser) return;
+    try {
+      if (this.likedIds.has(songId)) {
+        await this.supabase.unlikeSong(this.currentUser.id, songId);
+        this.likedIds.delete(songId);
+      } else {
+        await this.supabase.likeSong(this.currentUser.id, songId);
+        this.likedIds.add(songId);
+      }
+      this.likedIds = new Set(this.likedIds);
+      this.cdr.detectChanges();
+    } catch (e) { console.error(e); }
   }
 
   private async doSearch(query: string) {
