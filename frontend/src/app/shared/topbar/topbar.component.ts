@@ -1,8 +1,9 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../services/auth';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-topbar',
@@ -12,11 +13,23 @@ import { AuthService } from '../../services/auth';
     <header class="flex items-center justify-between px-6 h-16 bg-transparent z-10 w-full flex-shrink-0">
       <!-- Nav arrows -->
       <div class="flex items-center gap-2 flex-shrink-0">
-        <button class="bg-black/40 rounded-full p-1 text-neutral-400 cursor-default">
-          <svg viewBox="0 0 24 24" class="h-5 w-5 fill-current"><path d="M15.957 2.793a1 1 0 0 1 0 1.414L8.164 12l7.793 7.793a1 1 0 1 1-1.414 1.414L5.336 12l9.207-9.207a1 1 0 0 1 1.414 0z"/></svg>
+        <button (click)="goBack()" [disabled]="!canGoBack"
+          [class]="canGoBack
+            ? 'bg-black/60 hover:bg-neutral-700 rounded-full p-1.5 text-white cursor-pointer transition'
+            : 'bg-black/20 rounded-full p-1.5 text-neutral-600 cursor-not-allowed'"
+          title="Go back">
+          <svg viewBox="0 0 24 24" class="h-5 w-5 fill-current">
+            <path d="M15.957 2.793a1 1 0 0 1 0 1.414L8.164 12l7.793 7.793a1 1 0 1 1-1.414 1.414L5.336 12l9.207-9.207a1 1 0 0 1 1.414 0z"/>
+          </svg>
         </button>
-        <button class="bg-black/40 rounded-full p-1 text-neutral-400 cursor-default">
-          <svg viewBox="0 0 24 24" class="h-5 w-5 fill-current"><path d="M8.043 2.793a1 1 0 0 0 0 1.414L15.836 12l-7.793 7.793a1 1 0 1 0 1.414 1.414L18.664 12 9.457 2.793a1 1 0 0 0-1.414 0z"/></svg>
+        <button (click)="goForward()" [disabled]="!canGoForward"
+          [class]="canGoForward
+            ? 'bg-black/60 hover:bg-neutral-700 rounded-full p-1.5 text-white cursor-pointer transition'
+            : 'bg-black/20 rounded-full p-1.5 text-neutral-600 cursor-not-allowed'"
+          title="Go forward">
+          <svg viewBox="0 0 24 24" class="h-5 w-5 fill-current">
+            <path d="M8.043 2.793a1 1 0 0 0 0 1.414L15.836 12l-7.793 7.793a1 1 0 1 0 1.414 1.414L18.664 12 9.457 2.793a1 1 0 0 0-1.414 0z"/>
+          </svg>
         </button>
       </div>
 
@@ -51,6 +64,7 @@ import { AuthService } from '../../services/auth';
           <span class="block px-4 py-1.5 text-xs text-neutral-500 truncate">{{ user.email }}</span>
           <div class="border-t border-neutral-700 my-1"></div>
           <a routerLink="/library" class="block px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white transition no-underline">Your Library</a>
+          <a routerLink="/liked-songs" class="block px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white transition no-underline">Liked Songs</a>
           <a *ngIf="user.role === 'admin'" routerLink="/admin" class="block px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white transition no-underline">Admin Panel</a>
           <div class="border-t border-neutral-700 my-1"></div>
           <button (click)="logout()" class="w-full text-left block px-4 py-2 text-sm text-neutral-200 hover:bg-neutral-700 hover:text-white transition">
@@ -64,10 +78,16 @@ import { AuthService } from '../../services/auth';
 export class TopbarComponent implements OnInit {
   user: any = null;
   searchQuery = '';
+  canGoBack = false;
+  canGoForward = false;
+
+  private historyIndex = 0;
+  private historyLength = 0;
 
   constructor(
     private authService: AuthService,
     private router: Router,
+    private location: Location,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -77,6 +97,35 @@ export class TopbarComponent implements OnInit {
       this.user = u;
       this.cdr.detectChanges();
     });
+
+    // Track navigation to enable/disable back/forward
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd)
+    ).subscribe(() => {
+      this.historyLength++;
+      this.historyIndex++;
+      this.canGoBack = this.historyIndex > 1;
+      this.canGoForward = false; // after new nav, can't go forward
+      this.cdr.detectChanges();
+    });
+  }
+
+  goBack() {
+    if (this.canGoBack) {
+      this.historyIndex--;
+      this.canGoForward = true;
+      this.canGoBack = this.historyIndex > 1;
+      this.location.back();
+    }
+  }
+
+  goForward() {
+    if (this.canGoForward) {
+      this.historyIndex++;
+      this.canGoForward = this.historyIndex < this.historyLength;
+      this.canGoBack = this.historyIndex > 1;
+      this.location.forward();
+    }
   }
 
   goSearch() {

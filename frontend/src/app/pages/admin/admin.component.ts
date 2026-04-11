@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase';
 
-type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' | 'delete-artist' | 'delete-album';
+type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' | 'delete-artist' | 'delete-album' | 'categories' | 'languages';
 
 @Component({
   selector: 'app-admin',
@@ -239,6 +239,62 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
           </div>
         </div>
       </section>
+
+      <!-- ── TAB 7: Categories ── -->
+      <section *ngIf="activeTab === 'categories'" class="bg-neutral-900 p-6 rounded-xl">
+        <h3 class="text-xl font-bold text-white mb-5">🏷️ Manage Categories</h3>
+        <div class="flex gap-2 mb-5 max-w-lg">
+          <input type="text" [(ngModel)]="newCategoryName" placeholder="Category name *"
+            class="flex-1 bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white">
+          <input type="text" [(ngModel)]="newCategoryDesc" placeholder="Description (opt.)"
+            class="flex-1 bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white">
+          <button (click)="addCategory()" [disabled]="!newCategoryName || addingCategory"
+            class="bg-green-500 text-black font-bold px-4 py-2 rounded-md hover:bg-green-400 transition disabled:opacity-50 text-sm flex-shrink-0">
+            {{ addingCategory ? '...' : '+ Add' }}
+          </button>
+        </div>
+        <div *ngIf="categoryMsg" class="mb-4 text-sm" [class]="categorySuccess ? 'text-green-400' : 'text-red-400'">{{ categoryMsg }}</div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+          <div *ngFor="let cat of categories"
+            class="flex items-center justify-between bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 group hover:border-neutral-600 transition">
+            <div>
+              <p class="text-white text-sm font-medium">{{ cat.name }}</p>
+              <p *ngIf="cat.description" class="text-neutral-500 text-xs">{{ cat.description }}</p>
+            </div>
+            <button (click)="deleteCategory(cat.id)"
+              class="text-neutral-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition text-base ml-2">✕</button>
+          </div>
+        </div>
+        <p *ngIf="categories.length === 0" class="text-neutral-500 italic text-sm mt-2">No categories yet.</p>
+      </section>
+
+      <!-- ── TAB 8: Languages ── -->
+      <section *ngIf="activeTab === 'languages'" class="bg-neutral-900 p-6 rounded-xl">
+        <h3 class="text-xl font-bold text-white mb-5">🌐 Manage Languages</h3>
+        <div class="flex gap-2 mb-5 max-w-lg">
+          <input type="text" [(ngModel)]="newLanguageName" placeholder="Language name *"
+            class="flex-1 bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white">
+          <input type="text" [(ngModel)]="newLanguageCode" placeholder="Code (e.g. en)" style="max-width:90px"
+            class="bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white">
+          <button (click)="addLanguage()" [disabled]="!newLanguageName || addingLanguage"
+            class="bg-green-500 text-black font-bold px-4 py-2 rounded-md hover:bg-green-400 transition disabled:opacity-50 text-sm flex-shrink-0">
+            {{ addingLanguage ? '...' : '+ Add' }}
+          </button>
+        </div>
+        <div *ngIf="languageMsg" class="mb-4 text-sm" [class]="languageSuccess ? 'text-green-400' : 'text-red-400'">{{ languageMsg }}</div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+          <div *ngFor="let lang of languages"
+            class="flex items-center justify-between bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 group hover:border-neutral-600 transition">
+            <div>
+              <p class="text-white text-sm font-medium">{{ lang.name }}</p>
+              <p *ngIf="lang.code" class="text-neutral-500 text-xs uppercase tracking-wider">{{ lang.code }}</p>
+            </div>
+            <button (click)="deleteLanguage(lang.id)"
+              class="text-neutral-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition text-base ml-2">✕</button>
+          </div>
+        </div>
+        <p *ngIf="languages.length === 0" class="text-neutral-500 italic text-sm mt-2">No languages yet.</p>
+      </section>
     </div>
   `
 })
@@ -251,12 +307,19 @@ export class AdminComponent implements OnInit {
     { key: 'add-artist' as Tab, label: '➕ Add Artist' },
     { key: 'delete-artist' as Tab, label: '🗑️ Delete Artist' },
     { key: 'delete-album' as Tab, label: '📀 Delete Album' },
+    { key: 'categories' as Tab, label: '🏷️ Categories' },
+    { key: 'languages' as Tab, label: '🌐 Languages' },
   ];
 
   artists: any[] = [];
   allUsers: any[] = [];
   allSongs: any[] = [];
   allAlbums: any[] = [];
+  categories: any[] = [];
+  languages: any[] = [];
+
+  newCategoryName = ''; newCategoryDesc = ''; addingCategory = false; categoryMsg = ''; categorySuccess = false;
+  newLanguageName = ''; newLanguageCode = ''; addingLanguage = false; languageMsg = ''; languageSuccess = false;
 
   selectedArtistId: any = '';
   artistAlbums: any[] = [];
@@ -294,16 +357,20 @@ export class AdminComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      const [artists, albums, songs, users] = await Promise.all([
+      const [artists, albums, songs, users, categories, languages] = await Promise.all([
         this.supabase.getAllArtists(),
         this.supabase.getAllAlbums(),
         this.supabase.getAllSongs(),
         this.supabase.getAllUsers(),
+        this.supabase.getCategories(),
+        this.supabase.getLanguages(),
       ]);
       this.artists = artists;
       this.allAlbums = albums;
       this.allSongs = songs;
       this.allUsers = users;
+      this.categories = categories;
+      this.languages = languages;
     } catch (e) { console.error(e); }
     this.cdr.detectChanges();
   }
@@ -409,5 +476,43 @@ export class AdminComponent implements OnInit {
   fmtDur(s: number): string {
     if (!s) return '--:--';
     return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+  }
+
+  async addCategory() {
+    this.addingCategory = true; this.categoryMsg = '';
+    try {
+      await this.supabase.addCategory(this.newCategoryName, this.newCategoryDesc);
+      this.categorySuccess = true; this.categoryMsg = `Category "${this.newCategoryName}" added!`;
+      this.categories = await this.supabase.getCategories();
+      this.newCategoryName = ''; this.newCategoryDesc = '';
+    } catch (e: any) { this.categorySuccess = false; this.categoryMsg = e?.message || 'Failed.'; }
+    this.addingCategory = false; this.cdr.detectChanges();
+  }
+
+  async deleteCategory(id: number) {
+    try {
+      await this.supabase.deleteCategory(id);
+      this.categories = await this.supabase.getCategories();
+      this.cdr.detectChanges();
+    } catch (e: any) { this.categoryMsg = e?.message || 'Cannot delete (may be in use)'; this.categorySuccess = false; this.cdr.detectChanges(); }
+  }
+
+  async addLanguage() {
+    this.addingLanguage = true; this.languageMsg = '';
+    try {
+      await this.supabase.addLanguage(this.newLanguageName, this.newLanguageCode);
+      this.languageSuccess = true; this.languageMsg = `Language "${this.newLanguageName}" added!`;
+      this.languages = await this.supabase.getLanguages();
+      this.newLanguageName = ''; this.newLanguageCode = '';
+    } catch (e: any) { this.languageSuccess = false; this.languageMsg = e?.message || 'Failed.'; }
+    this.addingLanguage = false; this.cdr.detectChanges();
+  }
+
+  async deleteLanguage(id: number) {
+    try {
+      await this.supabase.deleteLanguage(id);
+      this.languages = await this.supabase.getLanguages();
+      this.cdr.detectChanges();
+    } catch (e: any) { this.languageMsg = e?.message || 'Cannot delete (may be in use)'; this.languageSuccess = false; this.cdr.detectChanges(); }
   }
 }

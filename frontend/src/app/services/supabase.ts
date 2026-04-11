@@ -194,13 +194,22 @@ export class SupabaseService {
   async getFeaturedPlaylists() {
     const { data, error } = await this.supabase
       .from('playlists')
-      .select('id, name, description, users!user_id(username)')
-      .limit(8);
+      .select('id, name, description, user_id, users!user_id(id, username)')
+      .eq('is_public', true)
+      .limit(12);
     if (error) {
       console.warn('getFeaturedPlaylists error:', error.message);
       return [];
     }
     return data ?? [];
+  }
+
+  async setPlaylistPublic(playlistId: number, isPublic: boolean) {
+    const { error } = await this.supabase
+      .from('playlists')
+      .update({ is_public: isPublic })
+      .eq('id', playlistId);
+    if (error) throw error;
   }
 
   async getRecentSongs() {
@@ -288,7 +297,7 @@ export class SupabaseService {
   async getPlaylistSongs(playlistId: number) {
     const { data, error } = await this.supabase
       .from('playlist_songs')
-      .select('song_id, added_date, songs(id, title, duration_sec, is_explicit, album_songs(albums(id, title, artists!artist_id(stage_name))))')
+      .select('song_id, added_date, songs(id, title, duration_sec, is_explicit, album_songs(albums(id, title, artists!artist_id(id, stage_name))))')
       .eq('playlist_id', playlistId);
     if (error) {
       console.warn('getPlaylistSongs error:', error.message);
@@ -356,20 +365,24 @@ export class SupabaseService {
     title: string;
     duration_sec?: number;
     is_explicit?: boolean;
+    category_id?: number;
+    language_id?: number;
+    track_no?: number;
   }) {
-    // First insert the song
     const { data: song, error: songErr } = await this.supabase
       .from('songs')
       .insert([{
         title: payload.title,
         duration_sec: payload.duration_sec || null,
         is_explicit: payload.is_explicit || false,
+        category_id: payload.category_id || null,
+        language_id: payload.language_id || null,
+        track_no: payload.track_no || null,
       }])
       .select()
       .single();
     if (songErr) throw songErr;
 
-    // Then link to album
     const { error: linkErr } = await this.supabase
       .from('album_songs')
       .insert([{ album_id: albumId, song_id: song.id }]);
@@ -482,5 +495,84 @@ export class SupabaseService {
       .single();
     if (error) throw error;
     return data;
+  }
+  // ─── CATEGORIES & LANGUAGES ───────────────────────────────────────────────
+
+  async getCategories() {
+    const { data, error } = await this.supabase
+      .from('categories').select('id, name, description').order('name');
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async addCategory(name: string, description?: string) {
+    const { data, error } = await this.supabase
+      .from('categories').insert([{ name, description: description || null }]).select().single();
+    if (error) throw error;
+    return data;
+  }
+
+  async deleteCategory(id: number) {
+    const { error } = await this.supabase.from('categories').delete().eq('id', id);
+    if (error) throw error;
+  }
+
+  async getLanguages() {
+    const { data, error } = await this.supabase
+      .from('languages').select('id, name, code').order('name');
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async addLanguage(name: string, code?: string) {
+    const { data, error } = await this.supabase
+      .from('languages').insert([{ name, code: code || null }]).select().single();
+    if (error) throw error;
+    return data;
+  }
+
+  async deleteLanguage(id: number) {
+    const { error } = await this.supabase.from('languages').delete().eq('id', id);
+    if (error) throw error;
+  }
+
+  // ─── LIKED SONGS ──────────────────────────────────────────────────────────
+
+  async likeSong(userId: number, songId: number) {
+    const { error } = await this.supabase
+      .from('liked_songs')
+      .insert([{ user_id: userId, song_id: songId, liked_at: new Date().toISOString().split('T')[0] }]);
+    if (error && !error.message.includes('duplicate')) throw error;
+  }
+
+  async unlikeSong(userId: number, songId: number) {
+    const { error } = await this.supabase
+      .from('liked_songs').delete().eq('user_id', userId).eq('song_id', songId);
+    if (error) throw error;
+  }
+
+  async getLikedSongIds(userId: number): Promise<Set<number>> {
+    const { data, error } = await this.supabase
+      .from('liked_songs').select('song_id').eq('user_id', userId);
+    if (error) return new Set();
+    return new Set((data ?? []).map((r: any) => r.song_id));
+  }
+
+  async getLikedSongs(userId: number) {
+    const { data, error } = await this.supabase
+      .from('liked_songs')
+      .select('song_id, liked_at, songs(id, title, duration_sec, is_explicit, category_id, language_id, album_songs(albums(id, title, artists!artist_id(id, stage_name))))')
+      .eq('user_id', userId)
+      .order('liked_at', { ascending: false });
+    if (error) {
+      console.warn('getLikedSongs error:', error.message);
+      return [];
+    }
+    return data ?? [];
+  
+  async updateArtistFormationYear(artistId: number, year: number) {
+    const { error } = await this.supabase
+      .from('artists').update({ formation_year: year }).eq('id', artistId);
+    if (error) throw error;
   }
 }

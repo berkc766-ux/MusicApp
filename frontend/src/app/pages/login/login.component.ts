@@ -89,12 +89,24 @@ type Mode = 'login' | 'signup-listener' | 'signup-artist';
               </div>
             </div>
 
-            <!-- Artist stage name -->
-            <div *ngIf="mode === 'signup-artist'">
-              <label class="block text-xs font-medium text-neutral-400 mb-1">Stage Name *</label>
-              <input type="text" [(ngModel)]="signupStageName" name="stageName"
-                placeholder="e.g. The Weeknd"
-                class="w-full bg-neutral-800 border border-green-600 text-white rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-green-400 transition">
+            <!-- Artist extra fields -->
+            <div *ngIf="mode === 'signup-artist'" class="space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-neutral-400 mb-1">Stage Name *</label>
+                <input type="text" [(ngModel)]="signupStageName" name="stageName"
+                  placeholder="e.g. The Weeknd"
+                  class="w-full bg-neutral-800 border border-green-600 text-white rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-green-400 transition">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-neutral-400 mb-1">Bio</label>
+                <textarea [(ngModel)]="signupBio" name="bio" rows="2" placeholder="Tell us about yourself..."
+                  class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-green-400 transition resize-none"></textarea>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-neutral-400 mb-1">Formation Year</label>
+                <input type="number" [(ngModel)]="signupFormationYear" name="formationYear" placeholder="e.g. 2015"
+                  class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-green-400 transition">
+              </div>
             </div>
 
             <div>
@@ -149,6 +161,8 @@ export class LoginComponent {
   signupEmail = '';
   signupPassword = '';
   signupStageName = '';
+  signupBio = '';
+  signupFormationYear: number | undefined = undefined;
 
   error = '';
   artistLinkWarning = '';
@@ -183,6 +197,8 @@ export class LoginComponent {
       lastName: this.signupLastName,
       role: this.mode === 'signup-artist' ? 'artist' : 'user',
       stageName: this.signupStageName,
+      bio: this.signupBio || undefined,
+      formationYear: this.signupFormationYear,
     });
     if (!result.success) {
       this.error = result.error || 'Registration failed.';

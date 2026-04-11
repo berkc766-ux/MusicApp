@@ -8,6 +8,7 @@ import { UserProfileComponent } from './pages/user-profile/user-profile.componen
 import { LibraryComponent } from './pages/library/library.component';
 import { PlaylistComponent } from './pages/playlist/playlist.component';
 import { SearchComponent } from './pages/search/search.component';
+import { LikedSongsComponent } from './pages/liked-songs/liked-songs.component';
 import { AdminComponent } from './pages/admin/admin.component';
 import { authGuard } from './guards/auth.guard';
 
@@ -25,6 +26,7 @@ export const routes: Routes = [
       { path: 'library', component: LibraryComponent },
       { path: 'playlist/:id', component: PlaylistComponent },
       { path: 'search', component: SearchComponent },
+      { path: 'liked-songs', component: LikedSongsComponent },
       { path: 'admin', component: AdminComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ]

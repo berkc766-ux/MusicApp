@@ -20,7 +20,9 @@ import { AuthService } from '../../services/auth';
             <svg viewBox="0 0 24 24" class="h-20 w-20 fill-white opacity-50"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-xs text-white font-semibold uppercase tracking-widest mb-1">Playlist</p>
+            <p class="text-xs text-white font-semibold uppercase tracking-widest mb-1">
+              Playlist <span *ngIf="playlist?.is_public" class="ml-2 bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full text-[10px]">Public</span>
+            </p>
             <h1 class="text-4xl font-bold text-white mb-2 truncate">{{ playlist?.name || 'Playlist' }}</h1>
             <p *ngIf="playlist?.description" class="text-neutral-400 text-sm mb-1 truncate">{{ playlist?.description }}</p>
             <p class="text-neutral-400 text-sm">
@@ -37,18 +39,86 @@ import { AuthService } from '../../services/auth';
           <button class="bg-green-500 text-black h-14 w-14 rounded-full flex items-center justify-center hover:scale-105 hover:bg-green-400 transition shadow-xl">
             <svg viewBox="0 0 16 16" class="h-6 w-6 fill-current ml-1"><path d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z"/></svg>
           </button>
-          <!-- Add Song button (owner only) -->
+          <!-- Add Song (owner only) -->
           <button *ngIf="isOwner" (click)="openAddSong()"
             class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-neutral-700 text-white text-sm font-semibold px-4 py-2 rounded-full transition">
             <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
             Add Songs
           </button>
-          <!-- Delete playlist (owner only) -->
+          <!-- Share (owner only) -->
+          <button *ngIf="isOwner" (click)="openShare()"
+            class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-neutral-700 text-white text-sm font-semibold px-4 py-2 rounded-full transition">
+            <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>
+            Share
+          </button>
+          <!-- Delete (owner only) -->
           <button *ngIf="isOwner" (click)="confirmDelete()"
             class="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 hover:text-red-300 text-sm font-semibold px-4 py-2 rounded-full transition">
             <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current"><path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zm3-9h2v8H9v-8zm4 0h2v8h-2v-8zM15.5 4l-1-1h-5l-1 1H5v2h14V4h-3.5z"/></svg>
-            Delete Playlist
+            Delete
           </button>
+        </div>
+
+        <!-- ─── Share Modal ─── -->
+        <div *ngIf="showShare"
+          class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+          (click)="showShare = false">
+          <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+            (click)="$event.stopPropagation()">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-xl font-bold text-white">Share Playlist</h3>
+                <p class="text-neutral-400 text-xs mt-0.5">{{ playlist?.name }}</p>
+              </div>
+              <button (click)="showShare = false" class="text-neutral-500 hover:text-white text-2xl leading-none">×</button>
+            </div>
+
+            <!-- Share with Everyone -->
+            <div class="mb-4 p-4 rounded-xl border transition"
+              [class]="playlist?.is_public ? 'bg-green-500/10 border-green-500/40' : 'bg-neutral-800 border-neutral-700'">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-white font-semibold text-sm">🌍 Share with Everyone</p>
+                  <p class="text-neutral-400 text-xs mt-0.5">Makes this playlist appear in Featured Playlists for all users</p>
+                </div>
+                <button (click)="togglePublic()" [disabled]="togglingPublic"
+                  [class]="playlist?.is_public
+                    ? 'relative inline-flex h-6 w-11 items-center rounded-full bg-green-500 transition'
+                    : 'relative inline-flex h-6 w-11 items-center rounded-full bg-neutral-600 transition'">
+                  <span [class]="playlist?.is_public ? 'translate-x-6 h-4 w-4 rounded-full bg-white inline-block transition' : 'translate-x-1 h-4 w-4 rounded-full bg-white inline-block transition'"></span>
+                </button>
+              </div>
+              <p *ngIf="playlist?.is_public" class="text-green-400 text-xs mt-2">✓ Now visible to all users in Featured Playlists</p>
+            </div>
+
+            <!-- Share with User -->
+            <div>
+              <p class="text-white font-semibold text-sm mb-2">👤 Share with a User</p>
+              <div class="relative mb-2">
+                <input type="text" [(ngModel)]="userSearch" placeholder="Search by username or email..."
+                  class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-white transition">
+              </div>
+              <div class="max-h-40 overflow-y-auto space-y-1">
+                <div *ngFor="let u of filteredUsers"
+                  (click)="shareWithUser(u)"
+                  class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/10 cursor-pointer transition group">
+                  <div class="flex items-center gap-2">
+                    <div class="h-7 w-7 bg-neutral-700 rounded-full flex items-center justify-center text-xs font-bold text-white">
+                      {{ u.username.charAt(0).toUpperCase() }}
+                    </div>
+                    <div>
+                      <p class="text-white text-sm font-medium">{{ u.username }}</p>
+                      <p class="text-neutral-500 text-xs">{{ u.email }}</p>
+                    </div>
+                  </div>
+                  <span class="text-green-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition">Share →</span>
+                </div>
+                <p *ngIf="filteredUsers.length === 0 && userSearch" class="text-neutral-500 text-sm italic px-2 py-1">No users found.</p>
+              </div>
+            </div>
+            <div *ngIf="shareMsg" class="mt-3 text-sm"
+              [class]="shareSuccess ? 'text-green-400' : 'text-red-400'">{{ shareMsg }}</div>
+          </div>
         </div>
 
         <!-- ─── Add Song Modal ─── -->
@@ -58,40 +128,24 @@ import { AuthService } from '../../services/auth';
           <div class="bg-neutral-900 border border-neutral-700 rounded-2xl p-6 w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]"
             (click)="$event.stopPropagation()">
             <div class="flex items-center justify-between mb-4 flex-shrink-0">
-              <div>
-                <h3 class="text-xl font-bold text-white">Add Songs</h3>
-                <p class="text-neutral-400 text-xs mt-0.5">to <span class="text-white font-semibold">{{ playlist?.name }}</span></p>
-              </div>
+              <h3 class="text-xl font-bold text-white">Add Songs</h3>
               <button (click)="showAddSong = false" class="text-neutral-500 hover:text-white text-2xl leading-none transition">×</button>
             </div>
-            <!-- Search -->
             <div class="relative flex-shrink-0 mb-3">
-              <svg viewBox="0 0 24 24" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 fill-neutral-400 pointer-events-none">
-                <path d="M10.533 1.279c-5.18 0-9.407 4.927-9.407 10.107C1.126 16.514 5.353 20 10.533 20c1.97 0 3.806-.518 5.395-1.463l4.547 4.364a1 1 0 0 0 1.395-1.435l-4.516-4.333C18.324 15.5 19.94 12.864 19.94 11.386c0-5.18-4.228-10.107-9.407-10.107zm0 2c4.176 0 7.407 3.834 7.407 8.107 0 4.272-3.231 7.614-7.407 7.614-4.176 0-7.407-3.342-7.407-7.614 0-4.273 3.231-8.107 7.407-8.107z"/>
-              </svg>
               <input type="text" [(ngModel)]="songSearch" placeholder="Search songs..."
-                class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-full py-2 pl-9 pr-4 text-sm focus:outline-none focus:border-white transition">
+                class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-full py-2 pl-4 pr-4 text-sm focus:outline-none focus:border-white transition">
             </div>
-            <!-- Song list -->
             <div class="flex-1 overflow-y-auto space-y-0.5 min-h-0">
               <div *ngFor="let song of filteredSongs"
                 (click)="addSong(song)"
                 class="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/10 cursor-pointer transition group">
-                <div class="flex items-center gap-3 min-w-0">
-                  <div class="h-9 w-9 bg-neutral-700 rounded flex-shrink-0 flex items-center justify-center">
-                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-neutral-400"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-                  </div>
-                  <span class="text-neutral-300 text-sm group-hover:text-white truncate">{{ song.title }}</span>
-                </div>
+                <span class="text-neutral-300 text-sm group-hover:text-white truncate">{{ song.title }}</span>
                 <span class="text-green-400 text-xs font-bold ml-3 flex-shrink-0 opacity-0 group-hover:opacity-100 transition">+ Add</span>
               </div>
               <p *ngIf="filteredSongs.length === 0" class="text-neutral-500 italic text-sm px-3 py-2">No songs found.</p>
             </div>
-            <!-- Feedback -->
-            <div *ngIf="addSongMsg" class="mt-3 flex-shrink-0 text-sm px-1"
-              [class]="addSongSuccess ? 'text-green-400' : 'text-red-400'">
-              {{ addSongMsg }}
-            </div>
+            <div *ngIf="addSongMsg" class="mt-3 flex-shrink-0 text-sm"
+              [class]="addSongSuccess ? 'text-green-400' : 'text-red-400'">{{ addSongMsg }}</div>
           </div>
         </div>
 
@@ -102,16 +156,13 @@ import { AuthService } from '../../services/auth';
           <div class="bg-neutral-900 border border-red-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
             (click)="$event.stopPropagation()">
             <h3 class="text-xl font-bold text-white mb-2">Delete Playlist?</h3>
-            <p class="text-neutral-400 text-sm mb-5">
-              This will permanently delete <span class="text-white font-semibold">{{ playlist?.name }}</span>.
-            </p>
+            <p class="text-neutral-400 text-sm mb-5">This will permanently delete <span class="text-white font-semibold">{{ playlist?.name }}</span>.</p>
             <div class="flex gap-3">
               <button (click)="deletePlaylist()" [disabled]="deleting"
                 class="bg-red-600 hover:bg-red-500 text-white font-bold px-5 py-2 rounded-full text-sm transition disabled:opacity-50">
                 {{ deleting ? 'Deleting...' : 'Yes, delete' }}
               </button>
-              <button (click)="showDeleteConfirm = false"
-                class="text-neutral-400 hover:text-white px-4 py-2 text-sm transition">Cancel</button>
+              <button (click)="showDeleteConfirm = false" class="text-neutral-400 hover:text-white px-4 py-2 text-sm transition">Cancel</button>
             </div>
           </div>
         </div>
@@ -127,7 +178,8 @@ import { AuthService } from '../../services/auth';
               <th class="pb-3 font-normal text-right pr-4">
                 <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current inline-block"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8z"/></svg>
               </th>
-              <th *ngIf="isOwner" class="w-10"></th>
+              <th class="w-8"></th>
+              <th *ngIf="isOwner" class="w-8"></th>
             </tr>
           </thead>
           <tbody>
@@ -148,7 +200,17 @@ import { AuthService } from '../../services/auth';
                 </a>
                 <span *ngIf="!item.songs?.album_songs?.[0]?.albums?.artists?.id">—</span>
               </td>
-              <td class="py-3 text-right pr-4 text-neutral-400 text-sm">{{ fmtDur(item.songs?.duration_sec) }}</td>
+              <td class="py-3 text-right pr-2 text-neutral-400 text-sm">{{ fmtDur(item.songs?.duration_sec) }}</td>
+              <!-- Like button -->
+              <td class="py-3 text-center">
+                <button (click)="toggleLike(item.songs?.id)"
+                  [class]="likedIds.has(item.songs?.id) ? 'text-red-400 hover:text-red-300 transition' : 'text-neutral-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition'"
+                  title="{{ likedIds.has(item.songs?.id) ? 'Unlike' : 'Like' }}">
+                  <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </button>
+              </td>
               <td *ngIf="isOwner" class="py-3 pr-2 text-right">
                 <button (click)="removeSong(item.songs?.id)"
                   class="text-neutral-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition text-lg leading-none"
@@ -169,8 +231,11 @@ export class PlaylistComponent implements OnInit {
   playlist: any = null;
   songs: any[] = [];
   allSongs: any[] = [];
+  allUsers: any[] = [];
+  likedIds = new Set<number>();
   loading = true;
   isOwner = false;
+  currentUser: any = null;
 
   showDeleteConfirm = false;
   deleting = false;
@@ -180,12 +245,27 @@ export class PlaylistComponent implements OnInit {
   addSongMsg = '';
   addSongSuccess = false;
 
+  showShare = false;
+  userSearch = '';
+  shareMsg = '';
+  shareSuccess = false;
+  togglingPublic = false;
+
   get filteredSongs() {
     const q = this.songSearch.trim().toLowerCase();
     const existing = new Set(this.songs.map((s: any) => s.songs?.id));
     const available = this.allSongs.filter((s: any) => !existing.has(s.id));
     if (!q) return available;
     return available.filter(s => s.title.toLowerCase().includes(q));
+  }
+
+  get filteredUsers() {
+    const q = this.userSearch.trim().toLowerCase();
+    const filtered = this.allUsers.filter((u: any) => u.id !== this.currentUser?.id);
+    if (!q) return filtered.slice(0, 8);
+    return filtered.filter((u: any) =>
+      u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+    ).slice(0, 8);
   }
 
   constructor(
@@ -198,29 +278,27 @@ export class PlaylistComponent implements OnInit {
 
   async ngOnInit() {
     this.playlistId = parseInt(this.route.snapshot.paramMap.get('id') || '0');
-    const currentUser = this.authService.getCurrentUser();
+    this.currentUser = this.authService.getCurrentUser();
     try {
-      const [playlist, songs, allSongs] = await Promise.all([
+      const [playlist, songs, allSongs, allUsers, likedIds] = await Promise.all([
         this.supabase.getPlaylistById(this.playlistId),
         this.supabase.getPlaylistSongs(this.playlistId),
         this.supabase.getAllSongs(),
+        this.supabase.getAllUsers(),
+        this.currentUser ? this.supabase.getLikedSongIds(this.currentUser.id) : Promise.resolve(new Set<number>()),
       ]);
       this.playlist = playlist;
       this.songs = songs;
       this.allSongs = allSongs;
-      this.isOwner = currentUser?.id === playlist?.user_id;
-    } catch (e) {
-      console.error(e);
-    }
+      this.allUsers = allUsers;
+      this.likedIds = likedIds;
+      this.isOwner = this.currentUser?.id === playlist?.user_id;
+    } catch (e) { console.error(e); }
     this.loading = false;
     this.cdr.detectChanges();
   }
 
-  openAddSong() {
-    this.songSearch = '';
-    this.addSongMsg = '';
-    this.showAddSong = true;
-  }
+  openAddSong() { this.songSearch = ''; this.addSongMsg = ''; this.showAddSong = true; }
 
   async addSong(song: any) {
     this.addSongMsg = '';
@@ -231,7 +309,7 @@ export class PlaylistComponent implements OnInit {
       this.addSongMsg = `"${song.title}" added!`;
     } catch (e: any) {
       this.addSongSuccess = false;
-      this.addSongMsg = e?.message?.includes('duplicate') ? `"${song.title}" is already in this playlist.` : (e?.message || 'Failed to add song.');
+      this.addSongMsg = e?.message?.includes('duplicate') ? `Already in playlist.` : (e?.message || 'Failed to add song.');
     }
     this.cdr.detectChanges();
   }
@@ -243,6 +321,48 @@ export class PlaylistComponent implements OnInit {
       this.songs = await this.supabase.getPlaylistSongs(this.playlistId);
       this.cdr.detectChanges();
     } catch (e) { console.error(e); }
+  }
+
+  async toggleLike(songId: number) {
+    if (!songId || !this.currentUser) return;
+    try {
+      if (this.likedIds.has(songId)) {
+        await this.supabase.unlikeSong(this.currentUser.id, songId);
+        this.likedIds.delete(songId);
+      } else {
+        await this.supabase.likeSong(this.currentUser.id, songId);
+        this.likedIds.add(songId);
+      }
+      this.likedIds = new Set(this.likedIds);
+      this.cdr.detectChanges();
+    } catch (e) { console.error(e); }
+  }
+
+  openShare() { this.userSearch = ''; this.shareMsg = ''; this.showShare = true; }
+
+  async togglePublic() {
+    if (!this.playlist) return;
+    this.togglingPublic = true;
+    try {
+      const newVal = !this.playlist.is_public;
+      await this.supabase.setPlaylistPublic(this.playlistId, newVal);
+      this.playlist = { ...this.playlist, is_public: newVal };
+    } catch (e: any) { console.error(e); }
+    this.togglingPublic = false;
+    this.cdr.detectChanges();
+  }
+
+  async shareWithUser(user: any) {
+    this.shareMsg = '';
+    try {
+      await this.supabase.sharePlaylist(this.playlistId, user.id);
+      this.shareSuccess = true;
+      this.shareMsg = `Shared with ${user.username}!`;
+    } catch (e: any) {
+      this.shareSuccess = false;
+      this.shareMsg = e?.message?.includes('duplicate') ? `Already shared with ${user.username}.` : (e?.message || 'Failed to share.');
+    }
+    this.cdr.detectChanges();
   }
 
   confirmDelete() { this.showDeleteConfirm = true; }

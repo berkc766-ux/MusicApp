@@ -203,6 +203,18 @@ import { AuthService } from '../../services/auth';
                 class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-400">
               <input type="number" [(ngModel)]="newSong.duration_sec" placeholder="Duration (seconds)"
                 class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-400">
+              <div class="flex gap-2">
+                <select [(ngModel)]="newSong.category_id"
+                  class="flex-1 bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-400">
+                  <option [ngValue]="undefined">Category...</option>
+                  <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
+                </select>
+                <select [(ngModel)]="newSong.language_id"
+                  class="flex-1 bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-400">
+                  <option [ngValue]="undefined">Language...</option>
+                  <option *ngFor="let lang of languages" [ngValue]="lang.id">{{ lang.name }}</option>
+                </select>
+              </div>
               <label class="flex items-center gap-2 text-sm text-neutral-400 cursor-pointer">
                 <input type="checkbox" [(ngModel)]="newSong.is_explicit" class="accent-green-500">
                 Explicit content
@@ -226,6 +238,8 @@ export class ArtistDashboardComponent implements OnInit {
   activeArtistIndex = 0;
   albums: any[] = [];
   loading = true;
+  categories: any[] = [];
+  languages: any[] = [];
 
   showCreateAlbum = false;
   newAlbum = { title: '', release_year: new Date().getFullYear(), type: 'album', record_label: '' };
@@ -234,7 +248,7 @@ export class ArtistDashboardComponent implements OnInit {
   albumSuccess = false;
 
   activeAlbum: any = null;
-  newSong = { title: '', duration_sec: undefined as number | undefined, is_explicit: false };
+  newSong = { title: '', duration_sec: undefined as number | undefined, is_explicit: false, category_id: undefined as number | undefined, language_id: undefined as number | undefined };
   addingSong = false;
   songMsg = '';
   songSuccess = false;
@@ -271,7 +285,14 @@ export class ArtistDashboardComponent implements OnInit {
     this.user = this.authService.getCurrentUser();
     if (this.user) {
       try {
-        this.artistProfiles = await this.supabase.getArtistsByUserId(this.user.id);
+        const [artistProfiles, categories, languages] = await Promise.all([
+          this.supabase.getArtistsByUserId(this.user.id),
+          this.supabase.getCategories(),
+          this.supabase.getLanguages(),
+        ]);
+        this.artistProfiles = artistProfiles;
+        this.categories = categories;
+        this.languages = languages;
         if (this.artistProfiles.length > 0) {
           this.artist = this.artistProfiles[0];
           this.albums = await this.supabase.getAlbumsByArtist(this.artist.id);
@@ -359,7 +380,7 @@ export class ArtistDashboardComponent implements OnInit {
 
   openAddSong(album: any) {
     this.activeAlbum = album;
-    this.newSong = { title: '', duration_sec: undefined, is_explicit: false };
+    this.newSong = { title: '', duration_sec: undefined, is_explicit: false, category_id: undefined, language_id: undefined };
     this.songMsg = '';
   }
 
@@ -371,7 +392,7 @@ export class ArtistDashboardComponent implements OnInit {
       this.songSuccess = true;
       this.songMsg = `"${this.newSong.title}" published!`;
       this.albums = await this.supabase.getAlbumsByArtist(this.artist.id);
-      this.newSong = { title: '', duration_sec: undefined, is_explicit: false };
+      this.newSong = { title: '', duration_sec: undefined, is_explicit: false, category_id: undefined, language_id: undefined };
     } catch (e: any) {
       this.songSuccess = false;
       this.songMsg = e?.message || 'Failed to publish song.';

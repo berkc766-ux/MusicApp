@@ -71,6 +71,8 @@ export class AuthService {
     lastName: string;
     role?: string;
     stageName?: string;
+    bio?: string;
+    formationYear?: number;
   }): Promise<{ success: boolean; error?: string; artistLinkError?: string }> {
     try {
       const user = await this.supabase.registerUser({
@@ -88,12 +90,15 @@ export class AuthService {
       // Attempt artist profile creation separately — don't block login if it fails
       if (data.role === 'artist' && data.stageName) {
         try {
-          await this.supabase.registerArtist(
+          const artist = await this.supabase.registerArtist(
             user.id,
             data.stageName,
             `${data.firstName} ${data.lastName}`,
-            ''
+            data.bio || ''
           );
+          if (data.formationYear && artist?.id) {
+            await this.supabase.updateArtistFormationYear(artist.id, data.formationYear);
+          }
         } catch (artistErr: any) {
           // Log in user but report the artist link failed
           this.navigateByRole(user.role);
