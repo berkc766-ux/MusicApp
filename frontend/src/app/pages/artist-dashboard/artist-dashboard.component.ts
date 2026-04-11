@@ -168,10 +168,29 @@ import { EventBusService } from '../../services/event-bus';
                 <h3 class="text-white font-bold">{{ album.title }}</h3>
                 <p class="text-neutral-500 text-xs">{{ album.release_year }} · {{ album.type || 'Album' }}</p>
               </div>
-              <button (click)="openAddSong(album)"
-                class="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full transition">
-                + Add Song
-              </button>
+              <div class="flex items-center gap-2">
+                <button (click)="openAddSong(album)"
+                  class="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full transition">
+                  + Add Song
+                </button>
+                <button *ngIf="albumToDelete?.id !== album.id" (click)="albumToDelete = album"
+                  class="text-neutral-600 hover:text-red-400 text-xs transition px-2 py-1.5 rounded-full hover:bg-red-500/10"
+                  title="Delete album">
+                  🗑
+                </button>
+                <!-- Inline confirm -->
+                <div *ngIf="albumToDelete?.id === album.id" class="flex items-center gap-1">
+                  <span class="text-red-400 text-xs">Delete?</span>
+                  <button (click)="deleteAlbum(album)" [disabled]="deletingAlbum"
+                    class="text-red-400 hover:text-red-300 text-xs font-bold px-2 py-1 rounded bg-red-500/15 hover:bg-red-500/25 transition disabled:opacity-50">
+                    {{ deletingAlbum ? '...' : 'Yes' }}
+                  </button>
+                  <button (click)="albumToDelete = null"
+                    class="text-neutral-500 hover:text-white text-xs px-2 py-1 rounded transition">
+                    No
+                  </button>
+                </div>
+              </div>
             </div>
             <div class="mt-2 space-y-1">
               <div *ngFor="let link of album.album_songs; let i = index"
@@ -281,6 +300,8 @@ export class ArtistDashboardComponent implements OnInit {
   creatingAlbum = false;
   albumMsg = '';
   albumSuccess = false;
+  albumToDelete: any = null;
+  deletingAlbum = false;
 
   addSongTab: 'new' | 'existing' = 'new';
   activeAlbum: any = null;
@@ -334,7 +355,13 @@ export class ArtistDashboardComponent implements OnInit {
   addProfileSuccess = false;
 
   get totalSongs() {
-    return this.albums.reduce((acc, al) => acc + (al.album_songs?.length || 0), 0);
+    const ids = new Set<number>();
+    for (const al of this.albums) {
+      for (const link of (al.album_songs || [])) {
+        if (link.songs?.id) ids.add(link.songs.id);
+      }
+    }
+    return ids.size;
   }
 
   constructor(
@@ -420,6 +447,21 @@ export class ArtistDashboardComponent implements OnInit {
       this.addProfileMsg = e?.message || 'Failed to add artist profile.';
     }
     this.addingProfile = false;
+    this.cdr.detectChanges();
+  }
+
+  async deleteAlbum(album: any) {
+    this.deletingAlbum = true;
+    try {
+      await this.supabase.deleteAlbumAndSongs(album.id);
+      this.albums = this.albums.filter(a => a.id !== album.id);
+      this.albumToDelete = null;
+      if (this.activeAlbum?.id === album.id) this.activeAlbum = null;
+      this.eventBus.triggerSidebarRefresh();
+    } catch (e: any) {
+      console.error('Delete album error:', e);
+    }
+    this.deletingAlbum = false;
     this.cdr.detectChanges();
   }
 
