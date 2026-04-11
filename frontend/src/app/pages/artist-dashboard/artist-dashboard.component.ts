@@ -198,7 +198,21 @@ import { AuthService } from '../../services/auth';
               <h3 class="text-white font-bold text-sm">Add Song to<br><span class="text-green-400">{{ activeAlbum.title }}</span></h3>
               <button (click)="activeAlbum = null" class="text-neutral-500 hover:text-white transition text-lg">×</button>
             </div>
-            <div class="space-y-3">
+
+            <!-- Tabs -->
+            <div class="flex gap-1 bg-neutral-800 p-1 rounded-lg mb-4">
+              <button (click)="addSongTab = 'new'"
+                [class]="addSongTab === 'new' ? 'flex-1 text-white bg-neutral-700 text-xs font-bold py-1.5 rounded-md transition' : 'flex-1 text-neutral-400 text-xs font-bold py-1.5 rounded-md hover:text-white transition'">
+                🎵 New Song
+              </button>
+              <button (click)="addSongTab = 'existing'"
+                [class]="addSongTab === 'existing' ? 'flex-1 text-white bg-neutral-700 text-xs font-bold py-1.5 rounded-md transition' : 'flex-1 text-neutral-400 text-xs font-bold py-1.5 rounded-md hover:text-white transition'">
+                📂 Existing
+              </button>
+            </div>
+
+            <!-- Tab: New Song -->
+            <div *ngIf="addSongTab === 'new'" class="space-y-3">
               <input type="text" [(ngModel)]="newSong.title" placeholder="Song title *"
                 class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-400">
               <input type="number" [(ngModel)]="newSong.duration_sec" placeholder="Duration (seconds)"
@@ -225,6 +239,26 @@ import { AuthService } from '../../services/auth';
               </button>
               <p *ngIf="songMsg" class="text-sm" [class]="songSuccess ? 'text-green-400' : 'text-red-400'">{{ songMsg }}</p>
             </div>
+
+            <!-- Tab: Existing Song -->
+            <div *ngIf="addSongTab === 'existing'">
+              <input type="text" [(ngModel)]="existingSongSearch" placeholder="Search your songs..."
+                class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-400 mb-3">
+              <div class="max-h-72 overflow-y-auto space-y-1">
+                <div *ngFor="let song of filteredExistingSongs"
+                  (click)="addExistingSong(song)"
+                  class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 cursor-pointer transition group">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-neutral-300 text-sm truncate group-hover:text-white">{{ song.title }}</p>
+                    <p class="text-neutral-600 text-xs truncate">{{ song.albumTitle }}</p>
+                  </div>
+                  <span class="text-green-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition ml-2">+ Add</span>
+                </div>
+                <p *ngIf="filteredExistingSongs.length === 0" class="text-neutral-600 italic text-xs px-3 py-2">No other songs found.</p>
+              </div>
+              <p *ngIf="existingSongMsg" class="text-sm mt-2" [class]="existingSongSuccess ? 'text-green-400' : 'text-red-400'">{{ existingSongMsg }}</p>
+            </div>
+
           </div>
         </div>
       </div>
@@ -247,11 +281,38 @@ export class ArtistDashboardComponent implements OnInit {
   albumMsg = '';
   albumSuccess = false;
 
+  addSongTab: 'new' | 'existing' = 'new';
   activeAlbum: any = null;
   newSong = { title: '', duration_sec: undefined as number | undefined, is_explicit: false, category_id: undefined as number | undefined, language_id: undefined as number | undefined };
   addingSong = false;
   songMsg = '';
   songSuccess = false;
+
+  existingSongSearch = '';
+  existingSongMsg = '';
+  existingSongSuccess = false;
+
+  get allArtistSongs(): { id: number; title: string; albumTitle: string; albumId: number }[] {
+    const result: { id: number; title: string; albumTitle: string; albumId: number }[] = [];
+    for (const album of this.albums) {
+      if (!this.activeAlbum || album.id === this.activeAlbum.id) continue;
+      for (const link of (album.album_songs || [])) {
+        if (link.songs) {
+          result.push({ id: link.songs.id, title: link.songs.title, albumTitle: album.title, albumId: album.id });
+        }
+      }
+    }
+    return result;
+  }
+
+  get filteredExistingSongs() {
+    const q = this.existingSongSearch.trim().toLowerCase();
+    // Exclude songs already in this album
+    const inAlbum = new Set((this.activeAlbum?.album_songs || []).map((l: any) => l.songs?.id));
+    const available = this.allArtistSongs.filter(s => !inAlbum.has(s.id));
+    if (!q) return available;
+    return available.filter(s => s.title.toLowerCase().includes(q) || s.albumTitle.toLowerCase().includes(q));
+  }
 
   // First profile setup
   showProfileSetup = false;
@@ -380,8 +441,11 @@ export class ArtistDashboardComponent implements OnInit {
 
   openAddSong(album: any) {
     this.activeAlbum = album;
+    this.addSongTab = 'new';
     this.newSong = { title: '', duration_sec: undefined, is_explicit: false, category_id: undefined, language_id: undefined };
     this.songMsg = '';
+    this.existingSongSearch = '';
+    this.existingSongMsg = '';
   }
 
   async addSongToAlbum() {
@@ -398,6 +462,22 @@ export class ArtistDashboardComponent implements OnInit {
       this.songMsg = e?.message || 'Failed to publish song.';
     }
     this.addingSong = false;
+    this.cdr.detectChanges();
+  }
+
+  async addExistingSong(song: { id: number; title: string }) {
+    if (!this.activeAlbum) return;
+    this.existingSongMsg = '';
+    try {
+      await this.supabase.addExistingSongToAlbum(this.activeAlbum.id, song.id);
+      this.existingSongSuccess = true;
+      this.existingSongMsg = `"${song.title}" added!`;
+      this.albums = await this.supabase.getAlbumsByArtist(this.artist.id);
+      this.cdr.detectChanges();
+    } catch (e: any) {
+      this.existingSongSuccess = false;
+      this.existingSongMsg = e?.message?.includes('duplicate') ? 'Already in this album.' : (e?.message || 'Failed to add song.');
+    }
     this.cdr.detectChanges();
   }
 

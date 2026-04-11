@@ -402,6 +402,13 @@ export class SupabaseService {
     if (error) throw error;
   }
 
+  async addExistingSongToAlbum(albumId: number, songId: number) {
+    const { error } = await this.supabase
+      .from('album_songs')
+      .insert([{ album_id: albumId, song_id: songId }]);
+    if (error) throw error;
+  }
+
   // ─── ADMIN: CRUD FEATURES ─────────────────────────────────────────────────
 
   async getSongsByArtist(artistId: number) {
