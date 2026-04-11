@@ -170,8 +170,13 @@ export class SidebarComponent implements OnInit {
   async loadData(user: any) {
     try {
       if (this.role === 'artist') {
-        const artist = await this.supabase.getArtistByUserId(user.id);
-        if (artist) this.artistAlbums = await this.supabase.getAlbumsByArtist(artist.id);
+        const artists = await this.supabase.getArtistsByUserId(user.id);
+        const allAlbums: any[] = [];
+        for (const a of artists) {
+          const albums = await this.supabase.getAlbumsByArtist(a.id);
+          allAlbums.push(...albums);
+        }
+        this.artistAlbums = allAlbums;
       } else {
         this.playlists = await this.supabase.getUserPlaylists(user.id);
       }

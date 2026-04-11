@@ -10,12 +10,33 @@ import { AuthService } from '../../services/auth';
   imports: [CommonModule, FormsModule],
   template: `
     <div class="pb-16">
+
+      <!-- ── Artist Selector (Manager Mode) ── -->
+      <div class="mb-6">
+        <div *ngIf="artistProfiles.length > 1" class="flex items-center gap-3 mb-4">
+          <svg viewBox="0 0 24 24" class="h-5 w-5 fill-green-400 flex-shrink-0">
+            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+          </svg>
+          <p class="text-green-400 text-sm font-semibold">Manager Mode — {{ artistProfiles.length }} artist profiles</p>
+        </div>
+
+        <div *ngIf="artistProfiles.length > 1" class="flex items-center gap-3 mb-5">
+          <label class="text-neutral-400 text-sm flex-shrink-0">Manage:</label>
+          <select [(ngModel)]="activeArtistIndex" (ngModelChange)="switchArtist($event)"
+            class="bg-neutral-800 border border-neutral-700 text-white rounded-full px-4 py-2 text-sm focus:outline-none focus:border-green-400 transition flex-1 max-w-xs">
+            <option *ngFor="let ap of artistProfiles; let i = index" [ngValue]="i">
+              {{ ap.stage_name }}
+            </option>
+          </select>
+        </div>
+      </div>
+
       <!-- Artist Profile Header -->
       <div class="flex items-end gap-6 mb-8 mt-2 bg-gradient-to-b from-green-900/40 to-transparent p-6 rounded-xl">
         <div class="h-36 w-36 bg-gradient-to-br from-green-700 to-teal-900 rounded-full flex items-center justify-center flex-shrink-0 shadow-2xl">
           <svg viewBox="0 0 24 24" class="h-16 w-16 fill-white opacity-60"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
         </div>
-        <div>
+        <div class="flex-1 min-w-0">
           <p class="text-xs text-green-400 font-semibold uppercase tracking-widest mb-1">🎤 Artist</p>
           <h1 class="text-4xl font-bold text-white mb-1">{{ artist?.stage_name || user?.username }}</h1>
           <p class="text-neutral-400 text-sm">{{ artist?.real_name || (user?.first_name + ' ' + user?.last_name) }}</p>
@@ -54,6 +75,32 @@ import { AuthService } from '../../services/auth';
         </div>
       </div>
 
+      <!-- ── Add Another Artist Profile (Manager mode) ── -->
+      <div *ngIf="artist" class="mb-6">
+        <button (click)="showAddProfile = !showAddProfile"
+          class="flex items-center gap-2 text-neutral-400 hover:text-white text-sm transition">
+          <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          Add another artist profile to manage
+        </button>
+        <div *ngIf="showAddProfile" class="mt-3 bg-neutral-900 border border-neutral-700 rounded-xl p-4 max-w-md space-y-2">
+          <p class="text-white font-semibold text-sm mb-2">New Artist Profile</p>
+          <input type="text" [(ngModel)]="newProfileStageName" placeholder="Stage name *"
+            class="w-full bg-neutral-800 border border-green-700/50 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-400">
+          <input type="text" [(ngModel)]="newProfileRealName" placeholder="Real name (optional)"
+            class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white">
+          <textarea [(ngModel)]="newProfileBio" placeholder="Bio (optional)" rows="2"
+            class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white resize-none"></textarea>
+          <div class="flex gap-2 pt-1">
+            <button (click)="addArtistProfile()" [disabled]="!newProfileStageName || addingProfile"
+              class="bg-green-500 text-black text-sm font-bold px-4 py-2 rounded-full hover:bg-green-400 transition disabled:opacity-50">
+              {{ addingProfile ? 'Adding...' : '+ Add Profile' }}
+            </button>
+            <button (click)="showAddProfile = false" class="text-neutral-400 hover:text-white text-sm px-3 py-2 transition">Cancel</button>
+          </div>
+          <p *ngIf="addProfileMsg" class="text-xs" [class]="addProfileSuccess ? 'text-green-400' : 'text-red-400'">{{ addProfileMsg }}</p>
+        </div>
+      </div>
+
       <!-- Quick Stats -->
       <div class="grid grid-cols-3 gap-4 mb-8">
         <div class="bg-neutral-900 p-4 rounded-xl border border-neutral-800 text-center">
@@ -75,7 +122,7 @@ import { AuthService } from '../../services/auth';
         <div class="flex-1">
           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-bold text-white">Your Albums</h2>
-            <button (click)="showCreateAlbum = !showCreateAlbum"
+            <button (click)="showCreateAlbum = !showCreateAlbum" *ngIf="artist"
               class="bg-green-500 text-black text-sm font-bold px-4 py-1.5 rounded-full hover:bg-green-400 transition flex items-center gap-1">
               <span>+</span> New Album
             </button>
@@ -105,9 +152,7 @@ import { AuthService } from '../../services/auth';
                   {{ creatingAlbum ? 'Creating...' : 'Create Album' }}
                 </button>
                 <button (click)="showCreateAlbum = false"
-                  class="text-neutral-400 hover:text-white text-sm px-4 py-2 transition">
-                  Cancel
-                </button>
+                  class="text-neutral-400 hover:text-white text-sm px-4 py-2 transition">Cancel</button>
               </div>
               <p *ngIf="albumMsg" class="text-sm" [class]="albumSuccess ? 'text-green-400' : 'text-red-400'">{{ albumMsg }}</p>
             </div>
@@ -127,8 +172,6 @@ import { AuthService } from '../../services/auth';
                 + Add Song
               </button>
             </div>
-
-            <!-- Songs in album -->
             <div class="mt-2 space-y-1">
               <div *ngFor="let link of album.album_songs; let i = index"
                 class="flex items-center justify-between py-1.5 px-2 hover:bg-white/5 rounded-md group">
@@ -139,15 +182,13 @@ import { AuthService } from '../../services/auth';
                 <div class="flex items-center gap-3">
                   <span class="text-neutral-500 text-xs">{{ fmtDur(link.songs?.duration_sec) }}</span>
                   <button (click)="removeSong(album, link.songs?.id)"
-                    class="text-red-500 opacity-0 group-hover:opacity-100 text-xs hover:text-red-400 transition">
-                    ✕
-                  </button>
+                    class="text-red-500 opacity-0 group-hover:opacity-100 text-xs hover:text-red-400 transition">✕</button>
                 </div>
               </div>
               <p *ngIf="!album.album_songs?.length" class="text-neutral-600 text-xs italic px-2 py-1">No songs yet.</p>
             </div>
           </div>
-          <p *ngIf="!loading && albums.length === 0" class="text-neutral-500 italic text-sm">No albums yet. Create your first!</p>
+          <p *ngIf="!loading && albums.length === 0 && artist" class="text-neutral-500 italic text-sm">No albums yet. Create your first!</p>
         </div>
 
         <!-- Add Song Panel (right side) -->
@@ -181,6 +222,8 @@ import { AuthService } from '../../services/auth';
 export class ArtistDashboardComponent implements OnInit {
   user: any = null;
   artist: any = null;
+  artistProfiles: any[] = [];
+  activeArtistIndex = 0;
   albums: any[] = [];
   loading = true;
 
@@ -196,7 +239,7 @@ export class ArtistDashboardComponent implements OnInit {
   songMsg = '';
   songSuccess = false;
 
-  // Profile setup (when no artist record linked)
+  // First profile setup
   showProfileSetup = false;
   profileStageName = '';
   profileRealName = '';
@@ -204,6 +247,15 @@ export class ArtistDashboardComponent implements OnInit {
   savingProfile = false;
   profileMsg = '';
   profileSuccess = false;
+
+  // Add new artist profile (manager mode)
+  showAddProfile = false;
+  newProfileStageName = '';
+  newProfileRealName = '';
+  newProfileBio = '';
+  addingProfile = false;
+  addProfileMsg = '';
+  addProfileSuccess = false;
 
   get totalSongs() {
     return this.albums.reduce((acc, al) => acc + (al.album_songs?.length || 0), 0);
@@ -219,8 +271,9 @@ export class ArtistDashboardComponent implements OnInit {
     this.user = this.authService.getCurrentUser();
     if (this.user) {
       try {
-        this.artist = await this.supabase.getArtistByUserId(this.user.id);
-        if (this.artist) {
+        this.artistProfiles = await this.supabase.getArtistsByUserId(this.user.id);
+        if (this.artistProfiles.length > 0) {
+          this.artist = this.artistProfiles[0];
           this.albums = await this.supabase.getAlbumsByArtist(this.artist.id);
         }
       } catch (e) { console.error('ngOnInit error:', e); }
@@ -229,17 +282,30 @@ export class ArtistDashboardComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  async switchArtist(index: number) {
+    this.loading = true;
+    this.albums = [];
+    this.activeAlbum = null;
+    this.cdr.detectChanges();
+    this.artist = this.artistProfiles[index];
+    try {
+      this.albums = await this.supabase.getAlbumsByArtist(this.artist.id);
+    } catch (e) { console.error(e); }
+    this.loading = false;
+    this.cdr.detectChanges();
+  }
+
   async createArtistProfile() {
     if (!this.user || !this.profileStageName) return;
-    this.savingProfile = true;
-    this.profileMsg = '';
+    this.savingProfile = true; this.profileMsg = '';
     try {
-      this.artist = await this.supabase.registerArtist(
-        this.user.id,
-        this.profileStageName,
+      const newArtist = await this.supabase.registerArtist(
+        this.user.id, this.profileStageName,
         this.profileRealName || `${this.user.first_name} ${this.user.last_name}`,
         this.profileBio
       );
+      this.artistProfiles = await this.supabase.getArtistsByUserId(this.user.id);
+      this.artist = newArtist;
       this.profileSuccess = true;
       this.profileMsg = 'Artist profile created successfully!';
       this.showProfileSetup = false;
@@ -249,6 +315,27 @@ export class ArtistDashboardComponent implements OnInit {
       this.profileMsg = e?.message || 'Failed to create profile. Make sure the SQL migration has been run.';
     }
     this.savingProfile = false;
+    this.cdr.detectChanges();
+  }
+
+  async addArtistProfile() {
+    if (!this.user || !this.newProfileStageName) return;
+    this.addingProfile = true; this.addProfileMsg = '';
+    try {
+      await this.supabase.registerArtist(
+        this.user.id, this.newProfileStageName,
+        this.newProfileRealName || '', this.newProfileBio
+      );
+      this.artistProfiles = await this.supabase.getArtistsByUserId(this.user.id);
+      this.addProfileSuccess = true;
+      this.addProfileMsg = `"${this.newProfileStageName}" artist profile added!`;
+      this.newProfileStageName = ''; this.newProfileRealName = ''; this.newProfileBio = '';
+      this.showAddProfile = false;
+    } catch (e: any) {
+      this.addProfileSuccess = false;
+      this.addProfileMsg = e?.message || 'Failed to add artist profile.';
+    }
+    this.addingProfile = false;
     this.cdr.detectChanges();
   }
 

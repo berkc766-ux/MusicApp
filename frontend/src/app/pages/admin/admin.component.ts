@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase';
 
-type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' | 'delete-album';
+type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' | 'delete-artist' | 'delete-album';
 
 @Component({
   selector: 'app-admin',
@@ -12,7 +12,7 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
   template: `
     <div class="pb-16">
       <h2 class="text-3xl font-bold text-white mb-2">Admin Panel</h2>
-      <p class="text-neutral-400 text-sm mb-6">Manage artists, songs, albums, and more.</p>
+      <p class="text-neutral-400 text-sm mb-6">Manage artists, songs, albums, users and more.</p>
 
       <!-- Tabs -->
       <div class="flex gap-2 mb-8 flex-wrap">
@@ -24,7 +24,7 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
         </button>
       </div>
 
-      <!-- ── TAB 1: Songs by Artist ────────────────────────────── -->
+      <!-- ── TAB 1: Songs by Artist ── -->
       <section *ngIf="activeTab === 'songs-by-artist'" class="bg-neutral-900 p-6 rounded-xl">
         <h3 class="text-xl font-bold text-white mb-4">Songs by Artist</h3>
         <div class="flex gap-3 mb-5">
@@ -54,9 +54,9 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
         <p *ngIf="artistAlbums.length === 0 && selectedArtistId && !loadingArtistSongs" class="text-neutral-500 italic text-sm mt-2">No albums found for this artist.</p>
       </section>
 
-      <!-- ── TAB 2: User Playlists ─────────────────────────────── -->
+      <!-- ── TAB 2: User Playlists ── -->
       <section *ngIf="activeTab === 'user-playlists'" class="bg-neutral-900 p-6 rounded-xl">
-        <h3 class="text-xl font-bold text-white mb-4">User Playlists & Song Count</h3>
+        <h3 class="text-xl font-bold text-white mb-4">User Playlists &amp; Song Count</h3>
         <div class="flex gap-3 mb-5">
           <select [(ngModel)]="selectedUserId"
             class="bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 flex-1 focus:outline-none focus:border-white">
@@ -85,7 +85,7 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
         <p *ngIf="userPlaylists.length === 0 && selectedUserId && !loadingUserPlaylists" class="text-neutral-500 italic text-sm">No playlists found.</p>
       </section>
 
-      <!-- ── TAB 3: Rename Song ────────────────────────────────── -->
+      <!-- ── TAB 3: Rename Song ── -->
       <section *ngIf="activeTab === 'rename-song'" class="bg-neutral-900 p-6 rounded-xl">
         <h3 class="text-xl font-bold text-white mb-4">Change Song Name</h3>
         <div class="space-y-4 max-w-lg">
@@ -112,33 +112,73 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
         </div>
       </section>
 
-      <!-- ── TAB 4: Add Artist ──────────────────────────────────── -->
+      <!-- ── TAB 4: Add Artist (Full Account) ── -->
       <section *ngIf="activeTab === 'add-artist'" class="bg-neutral-900 p-6 rounded-xl">
-        <h3 class="text-xl font-bold text-white mb-4">Add New Artist</h3>
+        <h3 class="text-xl font-bold text-white mb-1">Create Artist Account</h3>
+        <p class="text-neutral-400 text-sm mb-5">Creates a full user account (role: artist) linked to an artist profile.</p>
+
         <form (ngSubmit)="submitAddArtist()" class="space-y-4 max-w-lg">
-          <div>
-            <label class="block text-sm font-medium text-neutral-300 mb-1">Stage Name *</label>
-            <input type="text" [(ngModel)]="newArtist.stageName" name="stageName" required
-              class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 focus:outline-none focus:border-white transition">
+          <!-- User Info -->
+          <div class="border border-neutral-700 rounded-xl p-4 space-y-3">
+            <p class="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1">Account Details</p>
+            <div class="flex gap-2">
+              <div class="flex-1">
+                <label class="block text-xs font-medium text-neutral-400 mb-1">First Name *</label>
+                <input type="text" [(ngModel)]="newArtist.firstName" name="firstName" required
+                  class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white transition">
+              </div>
+              <div class="flex-1">
+                <label class="block text-xs font-medium text-neutral-400 mb-1">Last Name</label>
+                <input type="text" [(ngModel)]="newArtist.lastName" name="lastName"
+                  class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white transition">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-neutral-400 mb-1">Username *</label>
+              <input type="text" [(ngModel)]="newArtist.username" name="username" required
+                class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-neutral-400 mb-1">Email *</label>
+              <input type="email" [(ngModel)]="newArtist.email" name="email" required
+                class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-neutral-400 mb-1">Password *</label>
+              <input type="password" [(ngModel)]="newArtist.password" name="password" required minlength="6"
+                class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white transition">
+            </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-neutral-300 mb-1">Real Name</label>
-            <input type="text" [(ngModel)]="newArtist.realName" name="realName"
-              class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 focus:outline-none focus:border-white transition">
+
+          <!-- Artist Info -->
+          <div class="border border-green-800/50 rounded-xl p-4 space-y-3">
+            <p class="text-xs font-bold text-green-500/80 uppercase tracking-wider mb-1">Artist Profile</p>
+            <div>
+              <label class="block text-xs font-medium text-neutral-400 mb-1">Stage Name *</label>
+              <input type="text" [(ngModel)]="newArtist.stageName" name="stageName" required
+                placeholder="e.g. The Weeknd"
+                class="w-full bg-neutral-800 border border-green-700/50 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-400 transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-neutral-400 mb-1">Real Name</label>
+              <input type="text" [(ngModel)]="newArtist.realName" name="realName"
+                class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-neutral-400 mb-1">Bio</label>
+              <textarea [(ngModel)]="newArtist.bio" name="bio" rows="2"
+                class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white transition resize-none"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-neutral-400 mb-1">Formation Year</label>
+              <input type="number" [(ngModel)]="newArtist.formationYear" name="formationYear" placeholder="e.g. 2010"
+                class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white transition">
+            </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-neutral-300 mb-1">Bio</label>
-            <textarea [(ngModel)]="newArtist.bio" name="bio" rows="3"
-              class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 focus:outline-none focus:border-white transition resize-none"></textarea>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-neutral-300 mb-1">Formation Year</label>
-            <input type="number" [(ngModel)]="newArtist.formationYear" name="formationYear" placeholder="e.g. 2010"
-              class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 focus:outline-none focus:border-white transition">
-          </div>
-          <button type="submit" [disabled]="!newArtist.stageName || addingArtist"
+
+          <button type="submit" [disabled]="!newArtist.stageName || !newArtist.username || !newArtist.email || !newArtist.password || !newArtist.firstName || addingArtist"
             class="bg-green-500 text-black font-bold px-5 py-2 rounded-full hover:bg-green-400 transition disabled:opacity-50">
-            {{ addingArtist ? 'Adding...' : 'Add Artist' }}
+            {{ addingArtist ? 'Creating...' : '🎤 Create Artist Account' }}
           </button>
           <div *ngIf="addArtistMsg" [class]="addArtistSuccess ? 'text-green-400 text-sm bg-green-500/10 border border-green-500 p-3 rounded-lg' : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
             {{ addArtistMsg }}
@@ -146,9 +186,35 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
         </form>
       </section>
 
-      <!-- ── TAB 5: Delete Album ────────────────────────────────── -->
+      <!-- ── TAB 5: Delete Artist ── -->
+      <section *ngIf="activeTab === 'delete-artist'" class="bg-neutral-900 p-6 rounded-xl">
+        <h3 class="text-xl font-bold text-white mb-1">Delete Artist</h3>
+        <p class="text-neutral-400 text-sm mb-5">Deletes the artist profile along with all their albums and songs.</p>
+        <div class="space-y-4 max-w-lg">
+          <div>
+            <label class="block text-sm font-medium text-neutral-300 mb-1">Select Artist</label>
+            <select [(ngModel)]="selectedDeleteArtistId"
+              class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 focus:outline-none focus:border-white">
+              <option value="">-- Pick an artist --</option>
+              <option *ngFor="let a of artists" [value]="a.id">{{ a.stage_name }}</option>
+            </select>
+          </div>
+          <div *ngIf="selectedDeleteArtistId && !deleteArtistMsg" class="bg-red-500/10 border border-red-500/40 text-red-400 p-3 rounded-lg text-sm">
+            ⚠️ This will permanently delete the artist and all their music. This cannot be undone.
+          </div>
+          <button (click)="deleteArtist()" [disabled]="!selectedDeleteArtistId || deletingArtist"
+            class="bg-red-600 text-white font-bold px-5 py-2 rounded-full hover:bg-red-500 transition disabled:opacity-50">
+            {{ deletingArtist ? 'Deleting...' : 'Delete Artist' }}
+          </button>
+          <div *ngIf="deleteArtistMsg" [class]="deleteArtistSuccess ? 'text-green-400 text-sm bg-green-500/10 border border-green-500 p-3 rounded-lg' : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
+            {{ deleteArtistMsg }}
+          </div>
+        </div>
+      </section>
+
+      <!-- ── TAB 6: Delete Album ── -->
       <section *ngIf="activeTab === 'delete-album'" class="bg-neutral-900 p-6 rounded-xl">
-        <h3 class="text-xl font-bold text-white mb-2">Remove Album & Songs</h3>
+        <h3 class="text-xl font-bold text-white mb-2">Remove Album &amp; Songs</h3>
         <p class="text-neutral-400 text-sm mb-4">Deletes the album and all songs that exclusively belong to it.</p>
         <div class="space-y-4 max-w-lg">
           <div>
@@ -183,7 +249,8 @@ export class AdminComponent implements OnInit {
     { key: 'user-playlists' as Tab, label: '📋 User Playlists' },
     { key: 'rename-song' as Tab, label: '✏️ Rename Song' },
     { key: 'add-artist' as Tab, label: '➕ Add Artist' },
-    { key: 'delete-album' as Tab, label: '🗑️ Delete Album' },
+    { key: 'delete-artist' as Tab, label: '🗑️ Delete Artist' },
+    { key: 'delete-album' as Tab, label: '📀 Delete Album' },
   ];
 
   artists: any[] = [];
@@ -205,10 +272,18 @@ export class AdminComponent implements OnInit {
   renameMsg = '';
   renameSuccess = false;
 
-  newArtist = { stageName: '', realName: '', bio: '', formationYear: undefined as number | undefined };
+  newArtist = {
+    firstName: '', lastName: '', username: '', email: '', password: '',
+    stageName: '', realName: '', bio: '', formationYear: undefined as number | undefined
+  };
   addingArtist = false;
   addArtistMsg = '';
   addArtistSuccess = false;
+
+  selectedDeleteArtistId: any = '';
+  deletingArtist = false;
+  deleteArtistMsg = '';
+  deleteArtistSuccess = false;
 
   selectedAlbumId: any = '';
   deletingAlbum = false;
@@ -229,9 +304,7 @@ export class AdminComponent implements OnInit {
       this.allAlbums = albums;
       this.allSongs = songs;
       this.allUsers = users;
-    } catch (e) {
-      console.error(e);
-    }
+    } catch (e) { console.error(e); }
     this.cdr.detectChanges();
   }
 
@@ -264,8 +337,7 @@ export class AdminComponent implements OnInit {
       this.renameMsg = `Song renamed to "${result.title}" successfully.`;
       const idx = this.allSongs.findIndex((s: any) => s.id === result.id);
       if (idx >= 0) this.allSongs[idx].title = result.title;
-      this.newSongTitle = '';
-      this.selectedSongId = '';
+      this.newSongTitle = ''; this.selectedSongId = '';
     } catch (e: any) {
       this.renameSuccess = false;
       this.renameMsg = e?.message || 'Failed to rename song.';
@@ -275,25 +347,51 @@ export class AdminComponent implements OnInit {
   }
 
   async submitAddArtist() {
-    this.addingArtist = true;
-    this.addArtistMsg = '';
+    this.addingArtist = true; this.addArtistMsg = '';
     try {
-      const result = await this.supabase.addArtist(this.newArtist);
+      const result = await this.supabase.createFullArtist({
+        firstName: this.newArtist.firstName,
+        lastName: this.newArtist.lastName,
+        username: this.newArtist.username,
+        email: this.newArtist.email,
+        password: this.newArtist.password,
+        stageName: this.newArtist.stageName,
+        realName: this.newArtist.realName || undefined,
+        bio: this.newArtist.bio || undefined,
+        formationYear: this.newArtist.formationYear,
+      });
       this.addArtistSuccess = true;
-      this.addArtistMsg = `Artist "${result.stage_name}" added successfully!`;
+      this.addArtistMsg = `Artist "${result.artist.stage_name}" created! User account: ${result.user.email}`;
       this.artists = await this.supabase.getAllArtists();
-      this.newArtist = { stageName: '', realName: '', bio: '', formationYear: undefined };
+      this.allUsers = await this.supabase.getAllUsers();
+      this.newArtist = { firstName: '', lastName: '', username: '', email: '', password: '', stageName: '', realName: '', bio: '', formationYear: undefined };
     } catch (e: any) {
       this.addArtistSuccess = false;
-      this.addArtistMsg = e?.message || 'Failed to add artist.';
+      this.addArtistMsg = e?.message || 'Failed to create artist account.';
     }
     this.addingArtist = false;
     this.cdr.detectChanges();
   }
 
+  async deleteArtist() {
+    this.deletingArtist = true; this.deleteArtistMsg = '';
+    try {
+      await this.supabase.deleteArtist(parseInt(this.selectedDeleteArtistId));
+      this.deleteArtistSuccess = true;
+      this.deleteArtistMsg = 'Artist and all their music deleted successfully.';
+      this.artists = await this.supabase.getAllArtists();
+      this.allAlbums = await this.supabase.getAllAlbums();
+      this.selectedDeleteArtistId = '';
+    } catch (e: any) {
+      this.deleteArtistSuccess = false;
+      this.deleteArtistMsg = e?.message || 'Failed to delete artist.';
+    }
+    this.deletingArtist = false;
+    this.cdr.detectChanges();
+  }
+
   async deleteAlbum() {
-    this.deletingAlbum = true;
-    this.deleteMsg = '';
+    this.deletingAlbum = true; this.deleteMsg = '';
     try {
       await this.supabase.deleteAlbumAndSongs(parseInt(this.selectedAlbumId));
       this.deleteSuccess = true;

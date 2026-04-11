@@ -83,6 +83,59 @@ export class SupabaseService {
     return data;
   }
 
+  /** Returns ALL artist profiles linked to a user (manager mode) */
+  async getArtistsByUserId(userId: number) {
+    const { data, error } = await this.supabase
+      .from('artists')
+      .select('id, stage_name, real_name, bio, formation_year, user_id')
+      .eq('user_id', userId)
+      .order('stage_name');
+    if (error) throw error;
+    return data ?? [];
+  }
+
+  async deleteArtist(artistId: number) {
+    // Get albums to cascade-delete songs
+    const { data: albums } = await this.supabase
+      .from('albums').select('id').eq('artist_id', artistId);
+    const albumIds = (albums ?? []).map((a: any) => a.id);
+    if (albumIds.length > 0) {
+      const { data: links } = await this.supabase
+        .from('album_songs').select('song_id, album_id').in('album_id', albumIds);
+      const songIds = [...new Set((links ?? []).map((l: any) => l.song_id))];
+      await this.supabase.from('album_songs').delete().in('album_id', albumIds);
+      if (songIds.length > 0)
+        await this.supabase.from('songs').delete().in('id', songIds);
+      await this.supabase.from('albums').delete().in('id', albumIds);
+    }
+    const { error } = await this.supabase.from('artists').delete().eq('id', artistId);
+    if (error) throw error;
+  }
+
+  /** Admin: create a full artist account (user + artist profile) */
+  async createFullArtist(payload: {
+    username: string; email: string; password: string;
+    firstName: string; lastName: string;
+    stageName: string; realName?: string; bio?: string; formationYear?: number;
+  }) {
+    // 1. Create user with role=artist
+    const user = await this.registerUser({
+      username: payload.username, email: payload.email, password: payload.password,
+      firstName: payload.firstName, lastName: payload.lastName, role: 'artist',
+    });
+    // 2. Create artist profile linked to that user
+    const artist = await this.registerArtist(
+      user.id, payload.stageName,
+      payload.realName || `${payload.firstName} ${payload.lastName}`,
+      payload.bio || ''
+    );
+    if (payload.formationYear) {
+      await this.supabase.from('artists')
+        .update({ formation_year: payload.formationYear }).eq('id', artist.id);
+    }
+    return { user, artist };
+  }
+
   async getUserById(userId: number) {
     const { data, error } = await this.supabase
       .from('users')

@@ -59,13 +59,13 @@ type Mode = 'login' | 'signup-listener' | 'signup-artist';
         <div *ngIf="mode === 'signup-listener' || mode === 'signup-artist'">
           <h2 class="text-white text-2xl font-bold text-center mb-2">Sign up for Spotify</h2>
 
-          <!-- Role Selector -->
+          <!-- Account Type Selector -->
           <div class="flex gap-2 mb-5 mt-3">
             <button (click)="mode = 'signup-listener'; error = ''"
               [class]="mode === 'signup-listener'
                 ? 'flex-1 py-2 rounded-full text-sm font-bold bg-white text-black transition'
                 : 'flex-1 py-2 rounded-full text-sm font-bold border border-neutral-600 text-neutral-300 hover:border-white transition'">
-              🎧 Listener
+              👤 Personal
             </button>
             <button (click)="mode = 'signup-artist'; error = ''"
               [class]="mode === 'signup-artist'
@@ -121,7 +121,7 @@ type Mode = 'login' | 'signup-listener' | 'signup-artist';
               [class]="mode === 'signup-artist'
                 ? 'w-full bg-green-500 hover:bg-green-400 disabled:opacity-60 text-black font-bold py-3 rounded-full transition text-sm'
                 : 'w-full bg-white hover:bg-neutral-100 disabled:opacity-60 text-black font-bold py-3 rounded-full transition text-sm'">
-              {{ loading ? 'Creating account...' : (mode === 'signup-artist' ? '🎤 Join as Artist' : '🎧 Join as Listener') }}
+              {{ loading ? 'Creating account...' : (mode === 'signup-artist' ? '🎤 Join as Artist' : '👤 Create Account') }}
             </button>
           </form>
 
