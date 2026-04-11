@@ -209,6 +209,28 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
           </div>
         </section>
 
+        <!-- ── Users ── -->
+        <section *ngIf="results.users.length > 0" class="mb-8">
+          <h2 class="text-2xl font-bold text-white mb-4">Users</h2>
+          <div class="flex flex-wrap gap-4">
+            <a *ngFor="let u of results.users" [routerLink]="['/user', u.id]"
+              class="flex flex-col items-center w-36 p-4 rounded-xl hover:bg-white/10 transition cursor-pointer group no-underline">
+              <div class="h-20 w-20 rounded-full flex items-center justify-center mb-3 shadow-lg group-hover:opacity-90 transition text-2xl font-bold text-white"
+                [style.background]="'linear-gradient(135deg, #374151, #1f2937)'">
+                {{ (u.first_name || u.username || 'U').charAt(0).toUpperCase() }}
+              </div>
+              <p class="text-white text-sm font-semibold text-center truncate w-full group-hover:text-green-400 transition">
+                {{ u.first_name ? (u.first_name + ' ' + (u.last_name || '')) : u.username }}
+              </p>
+              <p class="text-neutral-500 text-xs mt-0.5 truncate w-full text-center">&#64;{{ u.username }}</p>
+              <span class="mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                [class]="u.role === 'artist' ? 'bg-green-500/20 text-green-400' : 'bg-neutral-700 text-neutral-400'">
+                {{ u.role === 'artist' ? 'Artist' : 'Listener' }}
+              </span>
+            </a>
+          </div>
+        </section>
+
       </div>
     </div>
   `,
@@ -220,8 +242,8 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 export class SearchComponent implements OnInit, OnDestroy {
   searchQuery = '';
   searching = false;
-  results: { songs: any[]; artists: any[]; albums: any[]; playlists: any[] } = {
-    songs: [], artists: [], albums: [], playlists: []
+  results: { songs: any[]; artists: any[]; albums: any[]; playlists: any[]; users: any[] } = {
+    songs: [], artists: [], albums: [], playlists: [], users: []
   };
   likedIds = new Set<number>();
   currentUser: any = null;
@@ -235,7 +257,8 @@ export class SearchComponent implements OnInit, OnDestroy {
       this.results.songs.length === 0 &&
       this.results.artists.length === 0 &&
       this.results.albums.length === 0 &&
-      this.results.playlists.length === 0;
+      this.results.playlists.length === 0 &&
+      this.results.users.length === 0;
   }
 
   constructor(
@@ -286,7 +309,7 @@ export class SearchComponent implements OnInit, OnDestroy {
 
   clearSearch() {
     this.searchQuery = '';
-    this.results = { songs: [], artists: [], albums: [], playlists: [] };
+    this.results = { songs: [], artists: [], albums: [], playlists: [], users: [] };
     this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
   }
 
@@ -307,7 +330,7 @@ export class SearchComponent implements OnInit, OnDestroy {
 
   private async doSearch(query: string) {
     if (!query.trim()) {
-      this.results = { songs: [], artists: [], albums: [], playlists: [] };
+      this.results = { songs: [], artists: [], albums: [], playlists: [], users: [] };
       this.cdr.detectChanges();
       return;
     }

@@ -175,17 +175,19 @@ export class SupabaseService {
 
   async searchAll(query: string) {
     const q = `%${query}%`;
-    const [songs, artists, albums, playlists] = await Promise.all([
+    const [songs, artists, albums, playlists, users] = await Promise.all([
       this.supabase.from('songs').select('id, title, duration_sec, is_explicit, album_songs(albums(id, title, artists!artist_id(id, stage_name)))').ilike('title', q).limit(10),
       this.supabase.from('artists').select('id, stage_name, real_name, bio').ilike('stage_name', q).limit(8),
       this.supabase.from('albums').select('id, title, release_year, type, artists!artist_id(id, stage_name)').ilike('title', q).limit(8),
       this.supabase.from('playlists').select('id, name, description, users!user_id(id, username)').ilike('name', q).limit(8),
+      this.supabase.from('users').select('id, username, first_name, last_name, role').or(`username.ilike.${q},first_name.ilike.${q},last_name.ilike.${q}`).neq('role', 'admin').limit(8),
     ]);
     return {
       songs: songs.data ?? [],
       artists: artists.data ?? [],
       albums: albums.data ?? [],
       playlists: playlists.data ?? [],
+      users: users.data ?? [],
     };
   }
 
