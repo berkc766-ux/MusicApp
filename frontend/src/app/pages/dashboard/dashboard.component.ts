@@ -15,12 +15,13 @@ import { AuthService } from '../../services/auth';
 
       <!-- Quick Access -->
       <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-10">
-        <div class="bg-white/10 hover:bg-white/20 transition rounded-md flex items-center h-16 cursor-pointer overflow-hidden">
+        <a routerLink="/liked-songs"
+          class="bg-white/10 hover:bg-white/20 transition rounded-md flex items-center h-16 cursor-pointer overflow-hidden no-underline">
           <div class="h-16 w-16 bg-gradient-to-br from-purple-700 to-indigo-700 flex items-center justify-center flex-shrink-0">
             <svg viewBox="0 0 24 24" class="h-7 w-7 fill-white"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
           </div>
           <span class="font-bold text-white px-4 text-sm">Liked Songs</span>
-        </div>
+        </a>
         <div class="bg-white/10 hover:bg-white/20 transition rounded-md flex items-center h-16 cursor-pointer overflow-hidden"
           (click)="showCreatePlaylist = true">
           <div class="h-16 w-16 bg-gradient-to-br from-green-700 to-teal-700 flex items-center justify-center flex-shrink-0">
@@ -158,6 +159,7 @@ import { AuthService } from '../../services/auth';
               <th class="pb-3 font-normal hidden md:table-cell">Album</th>
               <th class="pb-3 font-normal hidden md:table-cell">Artist</th>
               <th class="pb-3 font-normal text-right pr-4">⏱</th>
+              <th class="w-8"></th>
             </tr>
           </thead>
           <tbody>
@@ -179,9 +181,26 @@ import { AuthService } from '../../services/auth';
                 {{ song.album_songs?.[0]?.albums?.title || '—' }}
               </td>
               <td class="py-3 text-neutral-400 text-sm hidden md:table-cell truncate max-w-[140px]">
-                {{ song.album_songs?.[0]?.albums?.artists?.stage_name || '—' }}
+                <a *ngIf="song.album_songs?.[0]?.albums?.artists?.id"
+                  [routerLink]="['/artist', song.album_songs?.[0]?.albums?.artists?.id]"
+                  class="hover:text-green-400 transition" (click)="$event.stopPropagation()">
+                  {{ song.album_songs?.[0]?.albums?.artists?.stage_name || '—' }}
+                </a>
+                <span *ngIf="!song.album_songs?.[0]?.albums?.artists?.id">—</span>
               </td>
-              <td class="py-3 text-neutral-400 text-sm text-right pr-4">{{ fmtDur(song.duration_sec) }}</td>
+              <td class="py-3 text-neutral-400 text-sm text-right pr-2">{{ fmtDur(song.duration_sec) }}</td>
+              <!-- Like button -->
+              <td class="py-3 pr-3 text-center">
+                <button (click)="toggleLike(song.id); $event.stopPropagation()"
+                  [class]="likedIds.has(song.id)
+                    ? 'text-red-400 hover:text-red-300 transition'
+                    : 'text-neutral-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition'"
+                  title="{{ likedIds.has(song.id) ? 'Unlike' : 'Like' }}">
+                  <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -214,7 +233,9 @@ export class DashboardComponent implements OnInit {
   recentSongs: any[] = [];
   allSongs: any[] = [];
   artists: any[] = [];
+  likedIds = new Set<number>();
   isLoading = true;
+  currentUser: any = null;
 
   showCreatePlaylist = false;
   newPlaylistName = '';
@@ -243,21 +264,23 @@ export class DashboardComponent implements OnInit {
 
   async ngOnInit() {
     this.updateGreeting();
-    const user = this.authService.getCurrentUser();
-    this.userName = user?.first_name || user?.username || '';
+    this.currentUser = this.authService.getCurrentUser();
+    this.userName = this.currentUser?.first_name || this.currentUser?.username || '';
     try {
-      const [playlists, featured, songs, artists, allSongs] = await Promise.all([
-        user ? this.supabase.getUserPlaylists(user.id) : Promise.resolve([]),
+      const [playlists, featured, songs, artists, allSongs, likedIds] = await Promise.all([
+        this.currentUser ? this.supabase.getUserPlaylists(this.currentUser.id) : Promise.resolve([]),
         this.supabase.getFeaturedPlaylists(),
         this.supabase.getRecentSongs(),
         this.supabase.getAllArtists(),
         this.supabase.getAllSongs(),
+        this.currentUser ? this.supabase.getLikedSongIds(this.currentUser.id) : Promise.resolve(new Set<number>()),
       ]);
       this.myPlaylists = playlists;
       this.featuredPlaylists = featured;
       this.recentSongs = songs;
       this.artists = artists;
       this.allSongs = allSongs;
+      this.likedIds = likedIds;
     } catch (e) {
       console.error('Dashboard load error:', e);
     } finally {
@@ -266,14 +289,28 @@ export class DashboardComponent implements OnInit {
     }
   }
 
+  async toggleLike(songId: number) {
+    if (!songId || !this.currentUser) return;
+    try {
+      if (this.likedIds.has(songId)) {
+        await this.supabase.unlikeSong(this.currentUser.id, songId);
+        this.likedIds.delete(songId);
+      } else {
+        await this.supabase.likeSong(this.currentUser.id, songId);
+        this.likedIds.add(songId);
+      }
+      this.likedIds = new Set(this.likedIds);
+      this.cdr.detectChanges();
+    } catch (e) { console.error(e); }
+  }
+
   async createPlaylist() {
-    const user = this.authService.getCurrentUser();
-    if (!user || !this.newPlaylistName) return;
+    if (!this.currentUser || !this.newPlaylistName) return;
     this.creatingPlaylist = true;
     this.createPlaylistError = '';
     try {
-      await this.supabase.createPlaylist(user.id, this.newPlaylistName, this.newPlaylistDesc);
-      this.myPlaylists = await this.supabase.getUserPlaylists(user.id);
+      await this.supabase.createPlaylist(this.currentUser.id, this.newPlaylistName, this.newPlaylistDesc);
+      this.myPlaylists = await this.supabase.getUserPlaylists(this.currentUser.id);
       this.showCreatePlaylist = false;
       this.newPlaylistName = '';
       this.newPlaylistDesc = '';
@@ -298,9 +335,7 @@ export class DashboardComponent implements OnInit {
       await this.supabase.addSongToPlaylist(this.selectedPlaylistId, song.id);
       this.addSongSuccess = true;
       this.addSongMsg = `"${song.title}" added!`;
-      // Refresh my playlists song count
-      const user = this.authService.getCurrentUser();
-      if (user) this.myPlaylists = await this.supabase.getUserPlaylists(user.id);
+      if (this.currentUser) this.myPlaylists = await this.supabase.getUserPlaylists(this.currentUser.id);
     } catch (e: any) {
       this.addSongSuccess = false;
       this.addSongMsg = e?.message || 'Failed to add song.';

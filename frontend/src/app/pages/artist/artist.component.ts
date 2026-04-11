@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-artist',
@@ -9,7 +10,6 @@ import { SupabaseService } from '../../services/supabase';
   imports: [CommonModule, RouterLink],
   template: `
     <div class="pb-16">
-      <!-- Loading -->
       <div *ngIf="loading" class="flex items-center justify-center mt-20">
         <div class="flex flex-col items-center gap-3">
           <div class="h-12 w-12 rounded-full border-4 border-green-500 border-t-transparent animate-spin"></div>
@@ -17,27 +17,22 @@ import { SupabaseService } from '../../services/supabase';
         </div>
       </div>
 
-      <!-- Artist Not Found -->
       <div *ngIf="!loading && !artist" class="text-center mt-20">
         <p class="text-neutral-400 text-lg mb-3">Artist not found.</p>
         <a routerLink="/dashboard" class="text-green-400 hover:underline text-sm">← Back to Home</a>
       </div>
 
-      <!-- Artist Content -->
       <div *ngIf="!loading && artist">
-
         <!-- Hero Header -->
         <div class="relative mb-8">
           <div class="h-64 w-full bg-gradient-to-b from-green-900/60 via-neutral-900/80 to-transparent rounded-xl overflow-hidden flex items-end p-8">
             <div class="absolute inset-0 bg-gradient-to-b from-green-900/50 to-neutral-900 rounded-xl"></div>
             <div class="relative flex items-end gap-6 w-full">
-              <!-- Artist Avatar -->
               <div class="h-32 w-32 rounded-full bg-gradient-to-br from-green-600 to-teal-800 flex items-center justify-center shadow-2xl flex-shrink-0 border-4 border-black/30">
                 <svg viewBox="0 0 24 24" class="h-16 w-16 fill-white opacity-70">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
               </div>
-              <!-- Info -->
               <div class="flex-1 min-w-0">
                 <p class="text-xs font-bold text-green-400 uppercase tracking-widest mb-1">Artist</p>
                 <h1 class="text-5xl font-black text-white mb-1 truncate">{{ artist.stage_name }}</h1>
@@ -73,16 +68,13 @@ import { SupabaseService } from '../../services/supabase';
         <!-- Albums Section -->
         <div>
           <h2 class="text-2xl font-bold text-white mb-5">Discography</h2>
-
           <div *ngIf="albums.length === 0" class="text-neutral-500 italic text-sm">No albums published yet.</div>
 
           <div *ngFor="let album of albums" class="mb-4">
-            <!-- Album Card -->
             <div class="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden hover:border-neutral-600 transition-colors">
-              <!-- Album Header (clickable to expand) -->
+              <!-- Album Header -->
               <button (click)="toggleAlbum(album.id)"
                 class="w-full flex items-center gap-4 p-4 text-left hover:bg-white/5 transition group">
-                <!-- Album Art Placeholder -->
                 <div class="h-16 w-16 rounded-lg flex-shrink-0 flex items-center justify-center shadow-lg"
                   [ngClass]="getAlbumGradient(album.type)">
                   <svg viewBox="0 0 24 24" class="h-8 w-8 fill-white opacity-60">
@@ -98,7 +90,6 @@ import { SupabaseService } from '../../services/supabase';
                     <span *ngIf="album.record_label" class="text-neutral-600"> · {{ album.record_label }}</span>
                   </p>
                 </div>
-                <!-- Expand chevron -->
                 <svg viewBox="0 0 24 24" class="h-5 w-5 fill-neutral-500 flex-shrink-0 transition-transform duration-200"
                   [class.rotate-180]="expandedAlbums.has(album.id)">
                   <path d="M7 10l5 5 5-5z"/>
@@ -118,13 +109,22 @@ import { SupabaseService } from '../../services/supabase';
                     </div>
                   </div>
                   <span class="text-neutral-500 text-xs flex-shrink-0">{{ fmtDur(link.songs?.duration_sec) }}</span>
+                  <!-- Like button -->
+                  <button (click)="toggleLike(link.songs?.id)"
+                    [class]="likedIds.has(link.songs?.id)
+                      ? 'text-red-400 hover:text-red-300 transition flex-shrink-0'
+                      : 'text-neutral-700 hover:text-red-400 opacity-0 group-hover:opacity-100 transition flex-shrink-0'"
+                    title="{{ likedIds.has(link.songs?.id) ? 'Unlike' : 'Like' }}">
+                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                  </button>
                 </div>
                 <p *ngIf="!album.album_songs?.length" class="px-4 py-3 text-neutral-600 text-xs italic">No songs in this album.</p>
               </div>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   `,
@@ -139,6 +139,8 @@ export class ArtistComponent implements OnInit {
   albums: any[] = [];
   loading = true;
   expandedAlbums = new Set<number>();
+  likedIds = new Set<number>();
+  currentUser: any = null;
 
   get totalSongs() {
     return this.albums.reduce((acc, al) => acc + (al.album_songs?.length || 0), 0);
@@ -146,26 +148,45 @@ export class ArtistComponent implements OnInit {
 
   constructor(
     private supabase: SupabaseService,
+    private authService: AuthService,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) {}
 
   async ngOnInit() {
+    this.currentUser = this.authService.getCurrentUser();
     const id = parseInt(this.route.snapshot.paramMap.get('id') || '0');
     if (!id) { this.loading = false; return; }
     try {
-      const data = await this.supabase.getArtistById(id);
+      const [data, likedIds] = await Promise.all([
+        this.supabase.getArtistById(id),
+        this.currentUser ? this.supabase.getLikedSongIds(this.currentUser.id) : Promise.resolve(new Set<number>()),
+      ]);
       this.artist = data;
       this.albums = (data as any)?.albums || [];
-      // Sort albums by release year descending
       this.albums.sort((a: any, b: any) => (b.release_year || 0) - (a.release_year || 0));
-      // Auto-expand first album
+      this.likedIds = likedIds;
       if (this.albums.length > 0) this.expandedAlbums.add(this.albums[0].id);
     } catch (e) {
       console.error('Artist load error:', e);
     }
     this.loading = false;
     this.cdr.detectChanges();
+  }
+
+  async toggleLike(songId: number) {
+    if (!songId || !this.currentUser) return;
+    try {
+      if (this.likedIds.has(songId)) {
+        await this.supabase.unlikeSong(this.currentUser.id, songId);
+        this.likedIds.delete(songId);
+      } else {
+        await this.supabase.likeSong(this.currentUser.id, songId);
+        this.likedIds.add(songId);
+      }
+      this.likedIds = new Set(this.likedIds);
+      this.cdr.detectChanges();
+    } catch (e) { console.error(e); }
   }
 
   toggleAlbum(albumId: number) {

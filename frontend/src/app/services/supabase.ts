@@ -149,7 +149,7 @@ export class SupabaseService {
   async getPlaylistById(playlistId: number) {
     const { data, error } = await this.supabase
       .from('playlists')
-      .select('id, name, description, creation_date, user_id, users!user_id(id, username)')
+      .select('id, name, description, creation_date, user_id, is_public, users!user_id(id, username)')
       .eq('id', playlistId)
       .single();
     if (error) throw error;
