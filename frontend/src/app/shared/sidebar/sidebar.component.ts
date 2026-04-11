@@ -1,8 +1,9 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
 import { AuthService } from '../../services/auth';
+import { EventBusService } from '../../services/event-bus';
 
 @Component({
   selector: 'app-sidebar',
@@ -154,10 +155,11 @@ import { AuthService } from '../../services/auth';
         </div>
         <ul *ngIf="role === 'artist'" class="space-y-0.5">
           <li *ngFor="let al of artistAlbums">
-            <span class="flex items-center gap-2 px-4 py-2 text-sm text-neutral-400 truncate rounded-md hover:bg-white/5 hover:text-white transition cursor-default">
+            <a routerLink="/artist-dashboard"
+              class="flex items-center gap-2 px-4 py-2 text-sm text-neutral-400 truncate rounded-md hover:bg-white/5 hover:text-white transition no-underline">
               <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 fill-current flex-shrink-0 opacity-60"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
               {{ al.title }}
-            </span>
+            </a>
           </li>
           <li *ngIf="artistAlbums.length === 0" class="px-4 py-2 text-xs text-neutral-600 italic">No albums yet</li>
         </ul>
@@ -170,34 +172,50 @@ import { AuthService } from '../../services/auth';
     .scrollbar-thin::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
   `
 })
-export class SidebarComponent implements OnInit {
+export class SidebarComponent implements OnInit, OnDestroy {
   playlists: any[] = [];
   sharedPlaylists: any[] = [];
   artistAlbums: any[] = [];
   role = 'user';
   homeLink = '/dashboard';
+  private refreshSub: any;
+  private currentUser: any = null;
 
   constructor(
     private supabase: SupabaseService,
     private authService: AuthService,
+    private eventBus: EventBusService,
     private cdr: ChangeDetectorRef
   ) {}
 
   async ngOnInit() {
     const user = this.authService.getCurrentUser();
     if (user) {
+      this.currentUser = user;
       this.role = user.role || 'user';
       this.homeLink = this.role === 'artist' ? '/artist-dashboard' : this.role === 'admin' ? '/admin' : '/dashboard';
       await this.loadData(user);
     }
     this.authService.currentUser$.subscribe(async (user) => {
       if (user) {
+        this.currentUser = user;
         this.role = user.role || 'user';
         this.homeLink = this.role === 'artist' ? '/artist-dashboard' : this.role === 'admin' ? '/admin' : '/dashboard';
         await this.loadData(user);
         this.cdr.detectChanges();
       }
     });
+    // Refresh sidebar when artist creates/modifies albums
+    this.refreshSub = this.eventBus.sidebarRefresh$.subscribe(async () => {
+      if (this.currentUser) {
+        await this.loadData(this.currentUser);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.refreshSub?.unsubscribe();
   }
 
   async loadData(user: any) {

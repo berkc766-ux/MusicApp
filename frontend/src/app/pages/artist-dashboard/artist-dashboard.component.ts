@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase';
 import { AuthService } from '../../services/auth';
+import { EventBusService } from '../../services/event-bus';
 
 @Component({
   selector: 'app-artist-dashboard',
@@ -339,6 +340,7 @@ export class ArtistDashboardComponent implements OnInit {
   constructor(
     private supabase: SupabaseService,
     private authService: AuthService,
+    private eventBus: EventBusService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -429,6 +431,7 @@ export class ArtistDashboardComponent implements OnInit {
       this.albumSuccess = true;
       this.albumMsg = 'Album created!';
       this.albums = await this.supabase.getAlbumsByArtist(this.artist.id);
+      this.eventBus.triggerSidebarRefresh();
       this.newAlbum = { title: '', release_year: new Date().getFullYear(), type: 'album', record_label: '' };
       this.showCreateAlbum = false;
     } catch (e: any) {
@@ -456,6 +459,7 @@ export class ArtistDashboardComponent implements OnInit {
       this.songSuccess = true;
       this.songMsg = `"${this.newSong.title}" published!`;
       this.albums = await this.supabase.getAlbumsByArtist(this.artist.id);
+      this.eventBus.triggerSidebarRefresh();
       this.newSong = { title: '', duration_sec: undefined, is_explicit: false, category_id: undefined, language_id: undefined };
     } catch (e: any) {
       this.songSuccess = false;
