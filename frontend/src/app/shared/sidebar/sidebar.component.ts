@@ -14,10 +14,8 @@ import { EventBusService } from '../../services/event-bus';
       <!-- Logo -->
       <div class="px-6 mb-6">
         <a [routerLink]="homeLink" class="flex items-center gap-2 no-underline">
-          <svg viewBox="0 0 24 24" class="h-8 w-8 fill-white flex-shrink-0">
-            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.563.387-.857.207-2.35-1.434-5.305-1.76-8.784-.963-.335.077-.67-.133-.746-.467-.077-.334.132-.67.466-.745 3.808-.87 7.076-.497 9.714 1.115.293.18.386.563.207.853zm1.186-2.613c-.226.37-.706.486-1.074.26-2.686-1.652-6.784-2.13-9.97-1.166-.412.125-.845-.108-.97-.52-.125-.41.108-.844.52-.97 3.65-1.108 8.163-.563 11.233 1.33.37.225.485.704.26 1.066zm.106-2.736C14.65 9.145 8.5 8.92 4.957 9.996c-.495.148-1.02-.13-1.17-.624-.148-.495.13-1.02.625-1.17 4.05-1.23 10.85-1.002 14.693 1.277.443.264.587.842.324 1.284-.265.443-.843.588-1.285.324z"/>
-          </svg>
-          <span class="text-white font-bold text-lg">Spotify</span>
+          <img src="/icon.png" alt="Josepify" class="h-10 w-10 flex-shrink-0 object-contain">
+          <span class="text-white font-bold text-lg">Josepify</span>
         </a>
       </div>
 

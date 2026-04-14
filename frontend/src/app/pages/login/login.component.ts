@@ -15,17 +15,15 @@ type Mode = 'login' | 'signup-listener' | 'signup-artist';
 
       <!-- Logo -->
       <div class="mb-8 text-center">
-        <svg viewBox="0 0 24 24" class="h-12 w-12 fill-white mx-auto mb-2">
-          <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.563.387-.857.207-2.35-1.434-5.305-1.76-8.784-.963-.335.077-.67-.133-.746-.467-.077-.334.132-.67.466-.745 3.808-.87 7.076-.497 9.714 1.115.293.18.386.563.207.853zm1.186-2.613c-.226.37-.706.486-1.074.26-2.686-1.652-6.784-2.13-9.97-1.166-.412.125-.845-.108-.97-.52-.125-.41.108-.844.52-.97 3.65-1.108 8.163-.563 11.233 1.33.37.225.485.704.26 1.066zm.106-2.736C14.65 9.145 8.5 8.92 4.957 9.996c-.495.148-1.02-.13-1.17-.624-.148-.495.13-1.02.625-1.17 4.05-1.23 10.85-1.002 14.693 1.277.443.264.587.842.324 1.284-.265.443-.843.588-1.285.324z"/>
-        </svg>
-        <h1 class="text-white text-2xl font-bold tracking-tight">Spotify</h1>
+        <img src="/icon.png" alt="Josepify" class="h-24 w-24 mx-auto mb-2 object-contain">
+        <h1 class="text-white text-2xl font-bold tracking-tight">Josepify</h1>
       </div>
 
       <div class="bg-neutral-900 rounded-2xl p-8 w-full max-w-md shadow-2xl border border-neutral-800">
 
         <!-- LOGIN MODE -->
         <div *ngIf="mode === 'login'">
-          <h2 class="text-white text-2xl font-bold text-center mb-6">Log in to Spotify</h2>
+          <h2 class="text-white text-2xl font-bold text-center mb-6">Log in to Josepify</h2>
           <form (ngSubmit)="onLogin()" class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-neutral-300 mb-1">Email address</label>
@@ -50,14 +48,14 @@ type Mode = 'login' | 'signup-listener' | 'signup-artist';
           <div class="mt-6 border-t border-neutral-800 pt-5 text-center">
             <p class="text-neutral-400 text-sm">
               Don't have an account?
-              <button (click)="mode = 'signup-listener'; error = ''" class="text-white font-bold hover:underline ml-1">Sign up for Spotify</button>
+              <button (click)="mode = 'signup-listener'; error = ''" class="text-white font-bold hover:underline ml-1">Sign up for Josepify</button>
             </p>
           </div>
         </div>
 
         <!-- SIGNUP: Choose Role -->
         <div *ngIf="mode === 'signup-listener' || mode === 'signup-artist'">
-          <h2 class="text-white text-2xl font-bold text-center mb-2">Sign up for Spotify</h2>
+          <h2 class="text-white text-2xl font-bold text-center mb-2">Sign up for Josepify</h2>
 
           <!-- Account Type Selector -->
           <div class="flex gap-2 mb-5 mt-3">
