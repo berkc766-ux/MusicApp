@@ -68,7 +68,7 @@ import { AuthService } from '../../services/auth';
             <td class="py-3 text-neutral-400 text-sm hidden md:table-cell truncate max-w-[140px]">
               <a *ngIf="item.songs?.album_songs?.[0]?.albums?.artists?.id"
                 [routerLink]="['/artist', item.songs?.album_songs?.[0]?.albums?.artists?.id]"
-                class="hover:text-green-400 transition">
+                class="hover:text-blue-400 transition">
                 {{ item.songs?.album_songs?.[0]?.albums?.artists?.stage_name || '—' }}
               </a>
               <span *ngIf="!item.songs?.album_songs?.[0]?.albums?.artists?.id">—</span>

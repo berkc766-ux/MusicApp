@@ -21,7 +21,7 @@ import { AuthService } from '../../services/auth';
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-xs text-white font-semibold uppercase tracking-widest mb-1">
-              Playlist <span *ngIf="playlist?.is_public" class="ml-2 bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full text-[10px]">Public</span>
+              Playlist <span *ngIf="playlist?.is_public" class="ml-2 bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full text-[10px]">Public</span>
             </p>
             <h1 class="text-4xl font-bold text-white mb-2 truncate">{{ playlist?.name || 'Playlist' }}</h1>
             <p *ngIf="playlist?.description" class="text-neutral-400 text-sm mb-1 truncate">{{ playlist?.description }}</p>
@@ -36,7 +36,7 @@ import { AuthService } from '../../services/auth';
 
         <!-- Actions -->
         <div class="flex items-center gap-3 mb-6 flex-wrap">
-          <button class="bg-green-500 text-black h-14 w-14 rounded-full flex items-center justify-center hover:scale-105 hover:bg-green-400 transition shadow-xl">
+          <button class="bg-blue-500 text-black h-14 w-14 rounded-full flex items-center justify-center hover:scale-105 hover:bg-blue-400 transition shadow-xl">
             <svg viewBox="0 0 16 16" class="h-6 w-6 fill-current ml-1"><path d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z"/></svg>
           </button>
           <!-- Add Song (owner only) -->
@@ -75,7 +75,7 @@ import { AuthService } from '../../services/auth';
 
             <!-- Share with Everyone -->
             <div class="mb-4 p-4 rounded-xl border transition"
-              [class]="playlist?.is_public ? 'bg-green-500/10 border-green-500/40' : 'bg-neutral-800 border-neutral-700'">
+              [class]="playlist?.is_public ? 'bg-blue-500/10 border-blue-500/40' : 'bg-neutral-800 border-neutral-700'">
               <div class="flex items-center justify-between">
                 <div>
                   <p class="text-white font-semibold text-sm">🌍 Share with Everyone</p>
@@ -83,12 +83,12 @@ import { AuthService } from '../../services/auth';
                 </div>
                 <button (click)="togglePublic()" [disabled]="togglingPublic"
                   [class]="playlist?.is_public
-                    ? 'relative inline-flex h-6 w-11 items-center rounded-full bg-green-500 transition'
+                    ? 'relative inline-flex h-6 w-11 items-center rounded-full bg-blue-500 transition'
                     : 'relative inline-flex h-6 w-11 items-center rounded-full bg-neutral-600 transition'">
                   <span [class]="playlist?.is_public ? 'translate-x-6 h-4 w-4 rounded-full bg-white inline-block transition' : 'translate-x-1 h-4 w-4 rounded-full bg-white inline-block transition'"></span>
                 </button>
               </div>
-              <p *ngIf="playlist?.is_public" class="text-green-400 text-xs mt-2">✓ Now visible to all users in Featured Playlists</p>
+              <p *ngIf="playlist?.is_public" class="text-blue-400 text-xs mt-2">✓ Now visible to all users in Featured Playlists</p>
             </div>
 
             <!-- Share with User -->
@@ -111,13 +111,13 @@ import { AuthService } from '../../services/auth';
                       <p class="text-neutral-500 text-xs">{{ u.email }}</p>
                     </div>
                   </div>
-                  <span class="text-green-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition">Share →</span>
+                  <span class="text-blue-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition">Share →</span>
                 </div>
                 <p *ngIf="filteredUsers.length === 0 && userSearch" class="text-neutral-500 text-sm italic px-2 py-1">No users found.</p>
               </div>
             </div>
             <div *ngIf="shareMsg" class="mt-3 text-sm"
-              [class]="shareSuccess ? 'text-green-400' : 'text-red-400'">{{ shareMsg }}</div>
+              [class]="shareSuccess ? 'text-blue-400' : 'text-red-400'">{{ shareMsg }}</div>
           </div>
         </div>
 
@@ -140,12 +140,12 @@ import { AuthService } from '../../services/auth';
                 (click)="addSong(song)"
                 class="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/10 cursor-pointer transition group">
                 <span class="text-neutral-300 text-sm group-hover:text-white truncate">{{ song.title }}</span>
-                <span class="text-green-400 text-xs font-bold ml-3 flex-shrink-0 opacity-0 group-hover:opacity-100 transition">+ Add</span>
+                <span class="text-blue-400 text-xs font-bold ml-3 flex-shrink-0 opacity-0 group-hover:opacity-100 transition">+ Add</span>
               </div>
               <p *ngIf="filteredSongs.length === 0" class="text-neutral-500 italic text-sm px-3 py-2">No songs found.</p>
             </div>
             <div *ngIf="addSongMsg" class="mt-3 flex-shrink-0 text-sm"
-              [class]="addSongSuccess ? 'text-green-400' : 'text-red-400'">{{ addSongMsg }}</div>
+              [class]="addSongSuccess ? 'text-blue-400' : 'text-red-400'">{{ addSongMsg }}</div>
           </div>
         </div>
 
@@ -195,7 +195,7 @@ import { AuthService } from '../../services/auth';
               <td class="py-3 text-neutral-400 text-sm hidden md:table-cell truncate max-w-[140px]">
                 <a *ngIf="item.songs?.album_songs?.[0]?.albums?.artists?.id"
                   [routerLink]="['/artist', item.songs?.album_songs?.[0]?.albums?.artists?.id]"
-                  class="hover:text-green-400 transition">
+                  class="hover:text-blue-400 transition">
                   {{ item.songs?.album_songs?.[0]?.albums?.artists?.stage_name || '—' }}
                 </a>
                 <span *ngIf="!item.songs?.album_songs?.[0]?.albums?.artists?.id">—</span>
@@ -220,7 +220,7 @@ import { AuthService } from '../../services/auth';
           </tbody>
         </table>
         <p *ngIf="songs.length === 0" class="text-neutral-500 italic text-sm mt-4">This playlist is empty.
-          <button *ngIf="isOwner" (click)="openAddSong()" class="text-green-400 hover:underline ml-1">Add songs!</button>
+          <button *ngIf="isOwner" (click)="openAddSong()" class="text-blue-400 hover:underline ml-1">Add songs!</button>
         </p>
       </div>
     </div>

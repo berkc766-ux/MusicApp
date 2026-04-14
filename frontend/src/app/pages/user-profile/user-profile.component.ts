@@ -14,7 +14,7 @@ import { AuthService } from '../../services/auth';
       <!-- Loading -->
       <div *ngIf="loading" class="flex items-center justify-center mt-20">
         <div class="flex flex-col items-center gap-3">
-          <div class="h-12 w-12 rounded-full border-4 border-green-500 border-t-transparent animate-spin"></div>
+          <div class="h-12 w-12 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
           <p class="text-neutral-400 text-sm">Loading profile...</p>
         </div>
       </div>
@@ -22,7 +22,7 @@ import { AuthService } from '../../services/auth';
       <!-- Not Found -->
       <div *ngIf="!loading && !profileUser" class="text-center mt-20">
         <p class="text-neutral-400 text-lg mb-3">User not found.</p>
-        <a routerLink="/dashboard" class="text-green-400 hover:underline text-sm">← Back to Home</a>
+        <a routerLink="/dashboard" class="text-blue-400 hover:underline text-sm">← Back to Home</a>
       </div>
 
       <!-- Profile Content -->
@@ -46,7 +46,7 @@ import { AuthService } from '../../services/auth';
             </p>
             <!-- Own profile badge -->
             <span *ngIf="isOwnProfile"
-              class="inline-block mt-2 bg-green-500/20 text-green-400 text-xs font-bold px-3 py-1 rounded-full border border-green-500/30">
+              class="inline-block mt-2 bg-blue-500/20 text-blue-400 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30">
               ✓ This is you
             </span>
           </div>
@@ -84,14 +84,14 @@ import { AuthService } from '../../services/auth';
                 </svg>
                 <!-- Play hover overlay -->
                 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <div class="bg-green-500 rounded-full h-10 w-10 flex items-center justify-center shadow-lg">
+                  <div class="bg-blue-500 rounded-full h-10 w-10 flex items-center justify-center shadow-lg">
                     <svg viewBox="0 0 16 16" class="h-4 w-4 fill-black ml-0.5">
                       <path d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z"/>
                     </svg>
                   </div>
                 </div>
               </div>
-              <h3 class="text-white font-semibold text-sm truncate group-hover:text-green-400 transition">{{ pl.name }}</h3>
+              <h3 class="text-white font-semibold text-sm truncate group-hover:text-blue-400 transition">{{ pl.name }}</h3>
               <p class="text-neutral-400 text-xs mt-0.5">{{ pl.playlist_songs?.[0]?.count ?? 0 }} songs</p>
               <p *ngIf="pl.description" class="text-neutral-500 text-xs mt-0.5 truncate">{{ pl.description }}</p>
             </a>

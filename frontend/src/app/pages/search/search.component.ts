@@ -81,7 +81,7 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
         <!-- Searching spinner -->
         <div *ngIf="searching" class="flex items-center gap-3 mb-6">
-          <div class="h-5 w-5 rounded-full border-2 border-green-500 border-t-transparent animate-spin"></div>
+          <div class="h-5 w-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
           <p class="text-neutral-400 text-sm">Searching...</p>
         </div>
 
@@ -129,7 +129,7 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
                 <td class="py-3 text-neutral-400 text-sm hidden md:table-cell">
                   <a *ngIf="song.album_songs?.[0]?.albums?.artists"
                     [routerLink]="['/artist', song.album_songs?.[0]?.albums?.artists?.id]"
-                    class="hover:text-green-400 transition hover:underline">
+                    class="hover:text-blue-400 transition hover:underline">
                     {{ song.album_songs?.[0]?.albums?.artists?.stage_name || '—' }}
                   </a>
                   <span *ngIf="!song.album_songs?.[0]?.albums?.artists">—</span>
@@ -158,7 +158,7 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
           <div class="flex flex-wrap gap-4">
             <a *ngFor="let artist of results.artists" [routerLink]="['/artist', artist.id]"
               class="flex flex-col items-center w-36 p-4 rounded-xl hover:bg-white/10 transition cursor-pointer group no-underline">
-              <div class="h-28 w-28 rounded-full bg-gradient-to-br from-green-800 to-teal-900 flex items-center justify-center mb-3 shadow-lg group-hover:opacity-80 transition">
+              <div class="h-28 w-28 rounded-full bg-gradient-to-br from-blue-800 to-blue-950 flex items-center justify-center mb-3 shadow-lg group-hover:opacity-80 transition">
                 <svg viewBox="0 0 24 24" class="h-12 w-12 fill-white opacity-50">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
@@ -184,7 +184,7 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
               <p class="text-neutral-400 text-xs mt-0.5">
                 {{ album.release_year }} ·
                 <a *ngIf="album.artists" [routerLink]="['/artist', album.artists?.id]"
-                  class="hover:text-green-400 transition">{{ album.artists?.stage_name }}</a>
+                  class="hover:text-blue-400 transition">{{ album.artists?.stage_name }}</a>
               </p>
             </div>
           </div>
@@ -201,9 +201,9 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
                   <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
                 </svg>
               </div>
-              <h3 class="text-white font-semibold text-sm truncate group-hover:text-green-400 transition">{{ pl.name }}</h3>
+              <h3 class="text-white font-semibold text-sm truncate group-hover:text-blue-400 transition">{{ pl.name }}</h3>
               <p class="text-neutral-400 text-xs mt-0.5 truncate">
-                By <a [routerLink]="['/user', pl.users?.id]" class="hover:text-green-400 transition" (click)="$event.stopPropagation()">{{ pl.users?.username || 'Unknown' }}</a>
+                By <a [routerLink]="['/user', pl.users?.id]" class="hover:text-blue-400 transition" (click)="$event.stopPropagation()">{{ pl.users?.username || 'Unknown' }}</a>
               </p>
             </a>
           </div>
@@ -219,12 +219,12 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
                 [style.background]="'linear-gradient(135deg, #374151, #1f2937)'">
                 {{ (u.first_name || u.username || 'U').charAt(0).toUpperCase() }}
               </div>
-              <p class="text-white text-sm font-semibold text-center truncate w-full group-hover:text-green-400 transition">
+              <p class="text-white text-sm font-semibold text-center truncate w-full group-hover:text-blue-400 transition">
                 {{ u.first_name ? (u.first_name + ' ' + (u.last_name || '')) : u.username }}
               </p>
               <p class="text-neutral-500 text-xs mt-0.5 truncate w-full text-center">&#64;{{ u.username }}</p>
               <span class="mt-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                [class]="u.role === 'artist' ? 'bg-green-500/20 text-green-400' : 'bg-neutral-700 text-neutral-400'">
+                [class]="u.role === 'artist' ? 'bg-blue-500/20 text-blue-400' : 'bg-neutral-700 text-neutral-400'">
                 {{ u.role === 'artist' ? 'Artist' : 'Listener' }}
               </span>
             </a>

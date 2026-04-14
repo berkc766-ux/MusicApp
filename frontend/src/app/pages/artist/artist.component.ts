@@ -12,29 +12,29 @@ import { AuthService } from '../../services/auth';
     <div class="pb-16">
       <div *ngIf="loading" class="flex items-center justify-center mt-20">
         <div class="flex flex-col items-center gap-3">
-          <div class="h-12 w-12 rounded-full border-4 border-green-500 border-t-transparent animate-spin"></div>
+          <div class="h-12 w-12 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
           <p class="text-neutral-400 text-sm">Loading artist...</p>
         </div>
       </div>
 
       <div *ngIf="!loading && !artist" class="text-center mt-20">
         <p class="text-neutral-400 text-lg mb-3">Artist not found.</p>
-        <a routerLink="/dashboard" class="text-green-400 hover:underline text-sm">← Back to Home</a>
+        <a routerLink="/dashboard" class="text-blue-400 hover:underline text-sm">← Back to Home</a>
       </div>
 
       <div *ngIf="!loading && artist">
         <!-- Hero Header -->
         <div class="relative mb-8">
-          <div class="h-64 w-full bg-gradient-to-b from-green-900/60 via-neutral-900/80 to-transparent rounded-xl overflow-hidden flex items-end p-8">
-            <div class="absolute inset-0 bg-gradient-to-b from-green-900/50 to-neutral-900 rounded-xl"></div>
+          <div class="h-64 w-full bg-gradient-to-b from-blue-900/60 via-neutral-900/80 to-transparent rounded-xl overflow-hidden flex items-end p-8">
+            <div class="absolute inset-0 bg-gradient-to-b from-blue-900/50 to-neutral-900 rounded-xl"></div>
             <div class="relative flex items-end gap-6 w-full">
-              <div class="h-32 w-32 rounded-full bg-gradient-to-br from-green-600 to-teal-800 flex items-center justify-center shadow-2xl flex-shrink-0 border-4 border-black/30">
+              <div class="h-32 w-32 rounded-full bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center shadow-2xl flex-shrink-0 border-4 border-black/30">
                 <svg viewBox="0 0 24 24" class="h-16 w-16 fill-white opacity-70">
                   <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                 </svg>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-xs font-bold text-green-400 uppercase tracking-widest mb-1">Artist</p>
+                <p class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Artist</p>
                 <h1 class="text-5xl font-black text-white mb-1 truncate">{{ artist.stage_name }}</h1>
                 <p *ngIf="artist.real_name" class="text-neutral-300 text-sm">{{ artist.real_name }}</p>
                 <p *ngIf="artist.formation_year" class="text-neutral-500 text-xs mt-0.5">Since {{ artist.formation_year }}</p>
@@ -60,7 +60,7 @@ import { AuthService } from '../../services/auth';
             <p class="text-neutral-400 text-xs mt-1 uppercase tracking-wider">Songs</p>
           </div>
           <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-4 text-center">
-            <p class="text-3xl font-bold text-green-400">♫</p>
+            <p class="text-3xl font-bold text-blue-400">♫</p>
             <p class="text-neutral-400 text-xs mt-1 uppercase tracking-wider">Discography</p>
           </div>
         </div>
@@ -82,7 +82,7 @@ import { AuthService } from '../../services/auth';
                   </svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <h3 class="text-white font-bold truncate group-hover:text-green-400 transition">{{ album.title }}</h3>
+                  <h3 class="text-white font-bold truncate group-hover:text-blue-400 transition">{{ album.title }}</h3>
                   <p class="text-neutral-500 text-xs mt-0.5">
                     {{ album.release_year }} ·
                     <span class="capitalize">{{ album.type || 'Album' }}</span>
@@ -201,7 +201,7 @@ export class ArtistComponent implements OnInit {
     switch (type) {
       case 'single': return 'bg-gradient-to-br from-blue-800 to-indigo-900';
       case 'EP': return 'bg-gradient-to-br from-purple-800 to-violet-900';
-      default: return 'bg-gradient-to-br from-green-800 to-teal-900';
+      default: return 'bg-gradient-to-br from-blue-800 to-blue-950';
     }
   }
 

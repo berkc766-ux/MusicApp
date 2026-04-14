@@ -34,7 +34,7 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
             <option *ngFor="let a of artists" [value]="a.id">{{ a.stage_name }}</option>
           </select>
           <button (click)="loadSongsByArtist()" [disabled]="!selectedArtistId || loadingArtistSongs"
-            class="bg-green-500 text-black font-bold px-4 py-2 rounded-md hover:bg-green-400 transition disabled:opacity-50">
+            class="bg-blue-500 text-black font-bold px-4 py-2 rounded-md hover:bg-blue-400 transition disabled:opacity-50">
             {{ loadingArtistSongs ? 'Loading...' : 'Search' }}
           </button>
         </div>
@@ -64,7 +64,7 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
             <option *ngFor="let u of allUsers" [value]="u.id">{{ u.username }} ({{ u.email }})</option>
           </select>
           <button (click)="loadUserPlaylists()" [disabled]="!selectedUserId || loadingUserPlaylists"
-            class="bg-green-500 text-black font-bold px-4 py-2 rounded-md hover:bg-green-400 transition disabled:opacity-50">
+            class="bg-blue-500 text-black font-bold px-4 py-2 rounded-md hover:bg-blue-400 transition disabled:opacity-50">
             {{ loadingUserPlaylists ? 'Loading...' : 'Load' }}
           </button>
         </div>
@@ -103,10 +103,10 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
               class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 focus:outline-none focus:border-white transition">
           </div>
           <button (click)="renameSong()" [disabled]="!selectedSongId || !newSongTitle || renamingInProgress"
-            class="bg-green-500 text-black font-bold px-5 py-2 rounded-full hover:bg-green-400 transition disabled:opacity-50">
+            class="bg-blue-500 text-black font-bold px-5 py-2 rounded-full hover:bg-blue-400 transition disabled:opacity-50">
             {{ renamingInProgress ? 'Saving...' : 'Save Name' }}
           </button>
-          <div *ngIf="renameMsg" [class]="renameSuccess ? 'text-green-400 text-sm bg-green-500/10 border border-green-500 p-3 rounded-lg' : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
+          <div *ngIf="renameMsg" [class]="renameSuccess ? 'text-blue-400 text-sm bg-blue-500/10 border border-blue-500 p-3 rounded-lg' : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
             {{ renameMsg }}
           </div>
         </div>
@@ -151,13 +151,13 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
           </div>
 
           <!-- Artist Info -->
-          <div class="border border-green-800/50 rounded-xl p-4 space-y-3">
-            <p class="text-xs font-bold text-green-500/80 uppercase tracking-wider mb-1">Artist Profile</p>
+          <div class="border border-blue-800/50 rounded-xl p-4 space-y-3">
+            <p class="text-xs font-bold text-blue-500/80 uppercase tracking-wider mb-1">Artist Profile</p>
             <div>
               <label class="block text-xs font-medium text-neutral-400 mb-1">Stage Name *</label>
               <input type="text" [(ngModel)]="newArtist.stageName" name="stageName" required
                 placeholder="e.g. The Weeknd"
-                class="w-full bg-neutral-800 border border-green-700/50 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-green-400 transition">
+                class="w-full bg-neutral-800 border border-blue-700/50 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-blue-400 transition">
             </div>
             <div>
               <label class="block text-xs font-medium text-neutral-400 mb-1">Real Name</label>
@@ -177,10 +177,10 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
           </div>
 
           <button type="submit" [disabled]="!newArtist.stageName || !newArtist.username || !newArtist.email || !newArtist.password || !newArtist.firstName || addingArtist"
-            class="bg-green-500 text-black font-bold px-5 py-2 rounded-full hover:bg-green-400 transition disabled:opacity-50">
+            class="bg-blue-500 text-black font-bold px-5 py-2 rounded-full hover:bg-blue-400 transition disabled:opacity-50">
             {{ addingArtist ? 'Creating...' : '🎤 Create Artist Account' }}
           </button>
-          <div *ngIf="addArtistMsg" [class]="addArtistSuccess ? 'text-green-400 text-sm bg-green-500/10 border border-green-500 p-3 rounded-lg' : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
+          <div *ngIf="addArtistMsg" [class]="addArtistSuccess ? 'text-blue-400 text-sm bg-blue-500/10 border border-blue-500 p-3 rounded-lg' : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
             {{ addArtistMsg }}
           </div>
         </form>
@@ -206,7 +206,7 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
             class="bg-red-600 text-white font-bold px-5 py-2 rounded-full hover:bg-red-500 transition disabled:opacity-50">
             {{ deletingArtist ? 'Deleting...' : 'Delete Artist' }}
           </button>
-          <div *ngIf="deleteArtistMsg" [class]="deleteArtistSuccess ? 'text-green-400 text-sm bg-green-500/10 border border-green-500 p-3 rounded-lg' : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
+          <div *ngIf="deleteArtistMsg" [class]="deleteArtistSuccess ? 'text-blue-400 text-sm bg-blue-500/10 border border-blue-500 p-3 rounded-lg' : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
             {{ deleteArtistMsg }}
           </div>
         </div>
@@ -234,7 +234,7 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
             class="bg-red-600 text-white font-bold px-5 py-2 rounded-full hover:bg-red-500 transition disabled:opacity-50">
             {{ deletingAlbum ? 'Deleting...' : 'Delete Album' }}
           </button>
-          <div *ngIf="deleteMsg" [class]="deleteSuccess ? 'text-green-400 text-sm bg-green-500/10 border border-green-500 p-3 rounded-lg' : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
+          <div *ngIf="deleteMsg" [class]="deleteSuccess ? 'text-blue-400 text-sm bg-blue-500/10 border border-blue-500 p-3 rounded-lg' : 'text-red-400 text-sm bg-red-500/10 border border-red-500 p-3 rounded-lg'">
             {{ deleteMsg }}
           </div>
         </div>
@@ -249,11 +249,11 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
           <input type="text" [(ngModel)]="newCategoryDesc" placeholder="Description (opt.)"
             class="flex-1 bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white">
           <button (click)="addCategory()" [disabled]="!newCategoryName || addingCategory"
-            class="bg-green-500 text-black font-bold px-4 py-2 rounded-md hover:bg-green-400 transition disabled:opacity-50 text-sm flex-shrink-0">
+            class="bg-blue-500 text-black font-bold px-4 py-2 rounded-md hover:bg-blue-400 transition disabled:opacity-50 text-sm flex-shrink-0">
             {{ addingCategory ? '...' : '+ Add' }}
           </button>
         </div>
-        <div *ngIf="categoryMsg" class="mb-4 text-sm" [class]="categorySuccess ? 'text-green-400' : 'text-red-400'">{{ categoryMsg }}</div>
+        <div *ngIf="categoryMsg" class="mb-4 text-sm" [class]="categorySuccess ? 'text-blue-400' : 'text-red-400'">{{ categoryMsg }}</div>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
           <div *ngFor="let cat of categories"
             class="flex items-center justify-between bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 group hover:border-neutral-600 transition">
@@ -277,11 +277,11 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
           <input type="text" [(ngModel)]="newLanguageCode" placeholder="Code (e.g. en)" style="max-width:90px"
             class="bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white">
           <button (click)="addLanguage()" [disabled]="!newLanguageName || addingLanguage"
-            class="bg-green-500 text-black font-bold px-4 py-2 rounded-md hover:bg-green-400 transition disabled:opacity-50 text-sm flex-shrink-0">
+            class="bg-blue-500 text-black font-bold px-4 py-2 rounded-md hover:bg-blue-400 transition disabled:opacity-50 text-sm flex-shrink-0">
             {{ addingLanguage ? '...' : '+ Add' }}
           </button>
         </div>
-        <div *ngIf="languageMsg" class="mb-4 text-sm" [class]="languageSuccess ? 'text-green-400' : 'text-red-400'">{{ languageMsg }}</div>
+        <div *ngIf="languageMsg" class="mb-4 text-sm" [class]="languageSuccess ? 'text-blue-400' : 'text-red-400'">{{ languageMsg }}</div>
         <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
           <div *ngFor="let lang of languages"
             class="flex items-center justify-between bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 group hover:border-neutral-600 transition">

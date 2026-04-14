@@ -41,7 +41,7 @@ type Mode = 'login' | 'signup-listener' | 'signup-artist';
               {{ error }}
             </div>
             <button id="login-btn" type="submit" [disabled]="loading"
-              class="w-full bg-green-500 hover:bg-green-400 disabled:opacity-60 text-black font-bold py-3 rounded-full transition text-base">
+              class="w-full bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-black font-bold py-3 rounded-full transition text-base">
               {{ loading ? 'Logging in...' : 'Log In' }}
             </button>
           </form>
@@ -67,7 +67,7 @@ type Mode = 'login' | 'signup-listener' | 'signup-artist';
             </button>
             <button (click)="mode = 'signup-artist'; error = ''"
               [class]="mode === 'signup-artist'
-                ? 'flex-1 py-2 rounded-full text-sm font-bold bg-green-500 text-black transition'
+                ? 'flex-1 py-2 rounded-full text-sm font-bold bg-blue-500 text-black transition'
                 : 'flex-1 py-2 rounded-full text-sm font-bold border border-neutral-600 text-neutral-300 hover:border-white transition'">
               🎤 Artist
             </button>
@@ -93,17 +93,17 @@ type Mode = 'login' | 'signup-listener' | 'signup-artist';
                 <label class="block text-xs font-medium text-neutral-400 mb-1">Stage Name *</label>
                 <input type="text" [(ngModel)]="signupStageName" name="stageName"
                   placeholder="e.g. The Weeknd"
-                  class="w-full bg-neutral-800 border border-green-600 text-white rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-green-400 transition">
+                  class="w-full bg-neutral-800 border border-blue-600 text-white rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition">
               </div>
               <div>
                 <label class="block text-xs font-medium text-neutral-400 mb-1">Bio</label>
                 <textarea [(ngModel)]="signupBio" name="bio" rows="2" placeholder="Tell us about yourself..."
-                  class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-green-400 transition resize-none"></textarea>
+                  class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition resize-none"></textarea>
               </div>
               <div>
                 <label class="block text-xs font-medium text-neutral-400 mb-1">Formation Year</label>
                 <input type="number" [(ngModel)]="signupFormationYear" name="formationYear" placeholder="e.g. 2015"
-                  class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-green-400 transition">
+                  class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition">
               </div>
             </div>
 
@@ -129,7 +129,7 @@ type Mode = 'login' | 'signup-listener' | 'signup-artist';
 
             <button type="submit" [disabled]="loading"
               [class]="mode === 'signup-artist'
-                ? 'w-full bg-green-500 hover:bg-green-400 disabled:opacity-60 text-black font-bold py-3 rounded-full transition text-sm'
+                ? 'w-full bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-black font-bold py-3 rounded-full transition text-sm'
                 : 'w-full bg-white hover:bg-neutral-100 disabled:opacity-60 text-black font-bold py-3 rounded-full transition text-sm'">
               {{ loading ? 'Creating account...' : (mode === 'signup-artist' ? '🎤 Join as Artist' : '👤 Create Account') }}
             </button>

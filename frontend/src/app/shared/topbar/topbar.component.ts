@@ -52,7 +52,7 @@ import { filter } from 'rxjs/operators';
       <!-- User menu -->
       <div *ngIf="user" class="relative group flex-shrink-0">
         <button class="flex items-center gap-2 bg-black/60 hover:bg-neutral-800 rounded-full py-1 px-3 transition">
-          <div class="h-7 w-7 bg-green-600 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
+          <div class="h-7 w-7 bg-blue-600 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
             {{ (user.first_name || user.username || 'U').charAt(0).toUpperCase() }}
           </div>
           <span class="text-white text-sm font-semibold hidden sm:block truncate max-w-[100px]">

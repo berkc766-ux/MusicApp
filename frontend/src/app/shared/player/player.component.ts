@@ -51,7 +51,7 @@ import { CommonModule } from '@angular/common';
         <div class="flex items-center gap-2 w-full">
           <span class="text-xs text-neutral-400 min-w-[40px] text-right">{{ currentTime }}</span>
           <div class="h-1 bg-neutral-600 rounded-full w-full relative group cursor-pointer">
-            <div class="absolute top-0 left-0 h-full bg-white group-hover:bg-green-500 rounded-full" [style.width]="progress + '%'"></div>
+            <div class="absolute top-0 left-0 h-full bg-white group-hover:bg-blue-500 rounded-full" [style.width]="progress + '%'"></div>
             <div class="absolute h-3 w-3 bg-white rounded-full -top-1 opacity-0 group-hover:opacity-100 transition-opacity shadow" [style.left]="'calc(' + progress + '% - 6px)'"></div>
           </div>
           <span class="text-xs text-neutral-400 min-w-[40px]">3:32</span>
@@ -68,7 +68,7 @@ import { CommonModule } from '@angular/common';
             <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current"><path d="M9.741.85a.75.75 0 01.375.65v13a.75.75 0 01-1.125.65l-6.925-4a3.642 3.642 0 01-1.33-4.967 3.639 3.639 0 011.33-1.332l6.925-4a.75.75 0 01.75 0zm-6.924 5.3a2.139 2.139 0 000 3.7l5.8 3.35V2.8l-5.8 3.35zm8.683 4.29V5.56a2.75 2.75 0 010 4.88z"></path></svg>
           </button>
           <div class="h-1 bg-neutral-600 rounded-full w-full relative group cursor-pointer">
-            <div class="absolute top-0 left-0 h-full bg-white group-hover:bg-green-500 rounded-full" style="width: 50%;"></div>
+            <div class="absolute top-0 left-0 h-full bg-white group-hover:bg-blue-500 rounded-full" style="width: 50%;"></div>
             <div class="absolute h-3 w-3 bg-white rounded-full -top-1 left-[50%] -translate-x-[50%] opacity-0 group-hover:opacity-100 transition-opacity shadow"></div>
           </div>
         </div>

@@ -11,7 +11,7 @@ import { AuthService } from '../../services/auth';
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="pb-16">
-      <h2 class="text-3xl font-bold text-white mb-6">{{ greeting }}, <span class="text-green-400">{{ userName }}</span> 👋</h2>
+      <h2 class="text-3xl font-bold text-white mb-6">{{ greeting }}, <span class="text-blue-400">{{ userName }}</span> 👋</h2>
 
       <!-- Quick Access -->
       <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-10">
@@ -24,7 +24,7 @@ import { AuthService } from '../../services/auth';
         </a>
         <div class="bg-white/10 hover:bg-white/20 transition rounded-md flex items-center h-16 cursor-pointer overflow-hidden"
           (click)="showCreatePlaylist = true">
-          <div class="h-16 w-16 bg-gradient-to-br from-green-700 to-teal-700 flex items-center justify-center flex-shrink-0">
+          <div class="h-16 w-16 bg-gradient-to-br from-blue-700 to-blue-800 flex items-center justify-center flex-shrink-0">
             <svg viewBox="0 0 24 24" class="h-7 w-7 fill-white"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           </div>
           <span class="font-bold text-white px-4 text-sm">Create Playlist</span>
@@ -47,7 +47,7 @@ import { AuthService } from '../../services/auth';
             <div *ngIf="createPlaylistError" class="text-red-400 text-xs">{{ createPlaylistError }}</div>
             <div class="flex gap-2 pt-1">
               <button (click)="createPlaylist()" [disabled]="!newPlaylistName || creatingPlaylist"
-                class="bg-green-500 hover:bg-green-400 text-black font-bold px-5 py-2 rounded-full text-sm transition disabled:opacity-50">
+                class="bg-blue-500 hover:bg-blue-400 text-black font-bold px-5 py-2 rounded-full text-sm transition disabled:opacity-50">
                 {{ creatingPlaylist ? 'Creating...' : 'Create' }}
               </button>
               <button (click)="showCreatePlaylist = false"
@@ -76,11 +76,11 @@ import { AuthService } from '../../services/auth';
               (click)="addSong(song)"
               class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-white/10 cursor-pointer transition group">
               <span class="text-neutral-300 text-sm group-hover:text-white">{{ song.title }}</span>
-              <span class="text-green-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition">+ Add</span>
+              <span class="text-blue-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition">+ Add</span>
             </div>
             <p *ngIf="filteredSongs.length === 0" class="text-neutral-500 italic text-sm px-3 py-2">No songs found.</p>
           </div>
-          <div *ngIf="addSongMsg" class="mt-3 text-sm" [class]="addSongSuccess ? 'text-green-400' : 'text-red-400'">{{ addSongMsg }}</div>
+          <div *ngIf="addSongMsg" class="mt-3 text-sm" [class]="addSongSuccess ? 'text-blue-400' : 'text-red-400'">{{ addSongMsg }}</div>
           <button (click)="showAddSong = false" class="mt-4 text-neutral-400 hover:text-white text-sm transition">Done</button>
         </div>
       </div>
@@ -90,7 +90,7 @@ import { AuthService } from '../../services/auth';
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-white">My Playlists</h2>
           <button (click)="showCreatePlaylist = true"
-            class="text-green-400 hover:text-green-300 text-sm font-bold transition">
+            class="text-blue-400 hover:text-blue-300 text-sm font-bold transition">
             + New Playlist
           </button>
         </div>
@@ -101,7 +101,7 @@ import { AuthService } from '../../services/auth';
             <div class="aspect-square rounded-md mb-3 bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center shadow-lg relative">
               <svg viewBox="0 0 24 24" class="h-10 w-10 fill-white opacity-40"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
               <button (click)="$event.stopPropagation(); openAddSong(pl)"
-                class="absolute bottom-2 right-2 bg-green-500 text-black h-9 w-9 rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105">
+                class="absolute bottom-2 right-2 bg-blue-500 text-black h-9 w-9 rounded-full flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all shadow-xl hover:scale-105">
                 <svg viewBox="0 0 16 16" class="h-4 w-4 fill-current ml-0.5"><path d="M3 1.713a.7.7 0 011.05-.607l10.89 6.288a.7.7 0 010 1.212L4.05 14.894A.7.7 0 013 14.288V1.713z"/></svg>
               </button>
             </div>
@@ -110,7 +110,7 @@ import { AuthService } from '../../services/auth';
               <p class="text-neutral-400 text-xs mt-0.5">{{ pl.playlist_songs?.[0]?.count ?? 0 }} songs</p>
             </a>
             <button (click)="$event.stopPropagation(); openAddSong(pl)"
-              class="mt-2 w-full text-xs text-neutral-400 hover:text-green-400 transition text-left">
+              class="mt-2 w-full text-xs text-neutral-400 hover:text-blue-400 transition text-left">
               + Add songs
             </button>
           </div>
@@ -118,7 +118,7 @@ import { AuthService } from '../../services/auth';
         <p *ngIf="!isLoading && myPlaylists.length === 0"
           class="text-neutral-500 italic text-sm mt-2">
           No playlists yet.
-          <button (click)="showCreatePlaylist = true" class="text-green-400 hover:underline ml-1">Create your first!</button>
+          <button (click)="showCreatePlaylist = true" class="text-blue-400 hover:underline ml-1">Create your first!</button>
         </p>
       </section>
 
@@ -136,7 +136,7 @@ import { AuthService } from '../../services/auth';
               <span *ngIf="pl.description">{{ pl.description }}</span>
               <span *ngIf="!pl.description">By
                 <a *ngIf="pl.users?.id" [routerLink]="['/user', pl.users?.id]"
-                  class="hover:text-green-400 transition" (click)="$event.stopPropagation()">
+                  class="hover:text-blue-400 transition" (click)="$event.stopPropagation()">
                   {{ pl.users?.username || 'Unknown' }}
                 </a>
                 <span *ngIf="!pl.users?.id">{{ pl.users?.username || 'Unknown' }}</span>
@@ -183,7 +183,7 @@ import { AuthService } from '../../services/auth';
               <td class="py-3 text-neutral-400 text-sm hidden md:table-cell truncate max-w-[140px]">
                 <a *ngIf="song.album_songs?.[0]?.albums?.artists?.id"
                   [routerLink]="['/artist', song.album_songs?.[0]?.albums?.artists?.id]"
-                  class="hover:text-green-400 transition" (click)="$event.stopPropagation()">
+                  class="hover:text-blue-400 transition" (click)="$event.stopPropagation()">
                   {{ song.album_songs?.[0]?.albums?.artists?.stage_name || '—' }}
                 </a>
                 <span *ngIf="!song.album_songs?.[0]?.albums?.artists?.id">—</span>
@@ -216,7 +216,7 @@ import { AuthService } from '../../services/auth';
             <div class="h-36 w-36 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-900 mx-auto mb-2 flex items-center justify-center group-hover:opacity-80 transition shadow-lg">
               <svg viewBox="0 0 24 24" class="h-12 w-12 fill-neutral-500"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
             </div>
-            <p class="text-white text-sm font-semibold truncate group-hover:text-green-400 transition">{{ artist.stage_name }}</p>
+            <p class="text-white text-sm font-semibold truncate group-hover:text-blue-400 transition">{{ artist.stage_name }}</p>
             <p class="text-neutral-400 text-xs mt-0.5">Artist</p>
           </a>
           <p *ngIf="artists.length === 0" class="text-neutral-500 italic text-sm">No artists yet.</p>
