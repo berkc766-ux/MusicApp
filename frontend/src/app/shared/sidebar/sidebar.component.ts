@@ -135,14 +135,17 @@ import { EventBusService } from '../../services/event-bus';
             <h3 class="text-xs uppercase tracking-widest font-bold text-neutral-500 mb-1">Shared with You</h3>
           </div>
           <ul class="space-y-0.5">
-            <li *ngFor="let item of sharedPlaylists">
+            <li *ngFor="let item of sharedPlaylists" class="group flex items-center">
               <a [routerLink]="['/playlist', item.playlists?.id]"
-                class="flex items-center gap-2 px-4 py-2 text-sm hover:text-white transition-colors truncate rounded-md hover:bg-white/5 no-underline">
+                class="flex items-center gap-2 px-4 py-2 text-sm hover:text-white transition-colors truncate rounded-md hover:bg-white/5 no-underline flex-1 min-w-0">
                 <svg viewBox="0 0 24 24" class="h-3 w-3 fill-current flex-shrink-0 text-blue-500 opacity-80">
                   <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/>
                 </svg>
                 <span class="truncate">{{ item.playlists?.name }}</span>
               </a>
+              <button (click)="removeShared(item.playlists?.id)"
+                class="flex-shrink-0 text-neutral-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition px-2 py-2 text-base leading-none"
+                title="Remove from library">✕</button>
             </li>
           </ul>
         </ng-container>
@@ -235,6 +238,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
         }
         this.artistAlbums = allAlbums;
       }
+      this.cdr.detectChanges();
+    } catch (e) { console.error(e); }
+  }
+
+  async removeShared(playlistId: number) {
+    if (!playlistId || !this.currentUser) return;
+    try {
+      await this.supabase.removeSharedPlaylist(playlistId, this.currentUser.id);
+      this.sharedPlaylists = this.sharedPlaylists.filter(
+        (s: any) => s.playlists?.id !== playlistId
+      );
       this.cdr.detectChanges();
     } catch (e) { console.error(e); }
   }

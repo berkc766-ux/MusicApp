@@ -57,6 +57,12 @@ import { AuthService } from '../../services/auth';
             <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current"><path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zm3-9h2v8H9v-8zm4 0h2v8h-2v-8zM15.5 4l-1-1h-5l-1 1H5v2h14V4h-3.5z"/></svg>
             Delete
           </button>
+          <!-- Remove from Library (shared user only) -->
+          <button *ngIf="isSharedWithMe" (click)="confirmRemoveShared()"
+            class="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 hover:text-red-300 text-sm font-semibold px-4 py-2 rounded-full transition">
+            <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current"><path d="M19 13H5v-2h14v2z"/></svg>
+            Remove from Library
+          </button>
         </div>
 
         <!-- ─── Share Modal ─── -->
@@ -167,6 +173,27 @@ import { AuthService } from '../../services/auth';
           </div>
         </div>
 
+        <!-- ─── Remove shared playlist confirmation ─── -->
+        <div *ngIf="showRemoveSharedConfirm"
+          class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+          (click)="showRemoveSharedConfirm = false">
+          <div class="bg-neutral-900 border border-red-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+            (click)="$event.stopPropagation()">
+            <h3 class="text-xl font-bold text-white mb-2">Remove from Library?</h3>
+            <p class="text-neutral-400 text-sm mb-5">
+              <span class="text-white font-semibold">{{ playlist?.name }}</span> was shared with you.
+              It will be removed from your library but the playlist will not be deleted.
+            </p>
+            <div class="flex gap-3">
+              <button (click)="removeSharedPlaylist()" [disabled]="removingShared"
+                class="bg-red-600 hover:bg-red-500 text-white font-bold px-5 py-2 rounded-full text-sm transition disabled:opacity-50">
+                {{ removingShared ? 'Removing...' : 'Yes, remove' }}
+              </button>
+              <button (click)="showRemoveSharedConfirm = false" class="text-neutral-400 hover:text-white px-4 py-2 text-sm transition">Cancel</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Songs Table -->
         <table class="w-full text-left">
           <thead>
@@ -235,8 +262,12 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   likedIds = new Set<number>();
   loading = true;
   isOwner = false;
+  isSharedWithMe = false;
   currentUser: any = null;
   private routeSub: any;
+
+  showRemoveSharedConfirm = false;
+  removingShared = false;
 
   showDeleteConfirm = false;
   deleting = false;
@@ -308,6 +339,13 @@ export class PlaylistComponent implements OnInit, OnDestroy {
       this.allUsers = allUsers;
       this.likedIds = likedIds;
       this.isOwner = this.currentUser?.id === playlist?.user_id;
+      // Check if playlist was shared with current user (not owner)
+      if (!this.isOwner && this.currentUser) {
+        const shared = await this.supabase.getSharedPlaylistsForUser(this.currentUser.id);
+        this.isSharedWithMe = shared.some((s: any) => s.playlists?.id === this.playlistId);
+      } else {
+        this.isSharedWithMe = false;
+      }
     } catch (e) { console.error(e); }
     this.loading = false;
     this.cdr.detectChanges();
@@ -381,6 +419,21 @@ export class PlaylistComponent implements OnInit, OnDestroy {
   }
 
   confirmDelete() { this.showDeleteConfirm = true; }
+
+  confirmRemoveShared() { this.showRemoveSharedConfirm = true; }
+
+  async removeSharedPlaylist() {
+    this.removingShared = true;
+    try {
+      await this.supabase.removeSharedPlaylist(this.playlistId, this.currentUser.id);
+      this.router.navigate(['/dashboard']);
+    } catch (e) {
+      console.error(e);
+      this.removingShared = false;
+      this.showRemoveSharedConfirm = false;
+      this.cdr.detectChanges();
+    }
+  }
 
   async deletePlaylist() {
     this.deleting = true;

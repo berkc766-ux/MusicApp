@@ -318,6 +318,15 @@ export class SupabaseService {
     return data;
   }
 
+  async removeSharedPlaylist(playlistId: number, userId: number) {
+    const { error } = await this.supabase
+      .from('shared_playlists')
+      .delete()
+      .eq('playlist_id', playlistId)
+      .eq('user_id', userId);
+    if (error) throw error;
+  }
+
   async getSharedPlaylistsForUser(userId: number) {
     const { data, error } = await this.supabase
       .from('shared_playlists')
