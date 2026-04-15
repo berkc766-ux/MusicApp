@@ -495,6 +495,28 @@ export class SupabaseService {
     return true;
   }
 
+  async deleteUser(userId: number) {
+    // 1. Remove shared playlist entries where this user is the recipient
+    await this.supabase.from('shared_playlists').delete().eq('user_id', userId);
+    // 2. Get the user's own playlists
+    const { data: playlists } = await this.supabase
+      .from('playlists').select('id').eq('user_id', userId);
+    const playlistIds = (playlists ?? []).map((p: any) => p.id);
+    if (playlistIds.length > 0) {
+      // Remove shared entries pointing to owned playlists
+      await this.supabase.from('shared_playlists').delete().in('playlist_id', playlistIds);
+      // Remove songs from owned playlists
+      await this.supabase.from('playlist_songs').delete().in('playlist_id', playlistIds);
+      // Delete owned playlists
+      await this.supabase.from('playlists').delete().in('id', playlistIds);
+    }
+    // 3. Remove liked songs
+    await this.supabase.from('liked_songs').delete().eq('user_id', userId);
+    // 4. Delete the user
+    const { error } = await this.supabase.from('users').delete().eq('id', userId);
+    if (error) throw error;
+  }
+
   async getAllUsers() {
     const { data, error } = await this.supabase
       .from('users')

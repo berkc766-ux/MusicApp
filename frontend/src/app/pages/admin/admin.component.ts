@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase';
 
-type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' | 'delete-artist' | 'delete-album' | 'categories' | 'languages';
+type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' | 'delete-artist' | 'delete-album' | 'categories' | 'languages' | 'delete-user';
 
 @Component({
   selector: 'app-admin',
@@ -295,6 +295,81 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
         </div>
         <p *ngIf="languages.length === 0" class="text-neutral-500 italic text-sm mt-2">No languages yet.</p>
       </section>
+      <!-- ── TAB 9: Delete User ── -->
+      <section *ngIf="activeTab === 'delete-user'" class="bg-neutral-900 p-6 rounded-xl">
+        <h3 class="text-xl font-bold text-white mb-1">Delete User</h3>
+        <p class="text-neutral-400 text-sm mb-5">Permanently removes a user account along with their playlists and liked songs. Admin accounts cannot be deleted.</p>
+
+        <!-- Search -->
+        <div class="mb-4 max-w-sm">
+          <input type="text" [(ngModel)]="userDeleteSearch" placeholder="Search by username or email..."
+            class="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:border-white transition">
+        </div>
+
+        <!-- Users table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
+            <thead>
+              <tr class="text-xs uppercase text-neutral-400 border-b border-neutral-800">
+                <th class="pb-2 font-normal">Username</th>
+                <th class="pb-2 font-normal">Email</th>
+                <th class="pb-2 font-normal">Role</th>
+                <th class="pb-2 font-normal">Joined</th>
+                <th class="pb-2 font-normal text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let u of filteredDeleteUsers"
+                class="border-b border-neutral-800/50 hover:bg-white/5 transition group">
+                <td class="py-3 text-white font-medium">{{ u.username }}</td>
+                <td class="py-3 text-neutral-400">{{ u.email }}</td>
+                <td class="py-3">
+                  <span [class]="u.role === 'admin' ? 'bg-red-500/20 text-red-400 text-xs font-bold px-2 py-0.5 rounded-full'
+                    : u.role === 'artist' ? 'bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-0.5 rounded-full'
+                    : 'bg-neutral-700 text-neutral-300 text-xs font-bold px-2 py-0.5 rounded-full'">
+                    {{ u.role }}
+                  </span>
+                </td>
+                <td class="py-3 text-neutral-500 text-xs">{{ u.registration_date || '—' }}</td>
+                <td class="py-3 text-right">
+                  <button *ngIf="u.role !== 'admin'" (click)="confirmDeleteUser(u)"
+                    class="text-neutral-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition text-xs font-bold border border-transparent hover:border-red-400/30 px-2 py-1 rounded">
+                    🗑 Delete
+                  </button>
+                  <span *ngIf="u.role === 'admin'" class="text-neutral-700 text-xs">Protected</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p *ngIf="filteredDeleteUsers.length === 0" class="text-neutral-500 italic text-sm mt-4">No users found.</p>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div *ngIf="showDeleteUserConfirm"
+          class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+          (click)="showDeleteUserConfirm = false">
+          <div class="bg-neutral-900 border border-red-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+            (click)="$event.stopPropagation()">
+            <h3 class="text-xl font-bold text-white mb-2">Delete User?</h3>
+            <p class="text-neutral-400 text-sm mb-1">
+              You are about to permanently delete:
+            </p>
+            <p class="text-white font-semibold mb-1">{{ userToDelete?.username }}</p>
+            <p class="text-neutral-500 text-xs mb-4">{{ userToDelete?.email }}</p>
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-lg mb-5">
+              ⚠️ This will also delete their playlists and liked songs. This cannot be undone.
+            </div>
+            <div class="flex gap-3">
+              <button (click)="executeDeleteUser()" [disabled]="deletingUser"
+                class="bg-red-600 hover:bg-red-500 text-white font-bold px-5 py-2 rounded-full text-sm transition disabled:opacity-50">
+                {{ deletingUser ? 'Deleting...' : 'Yes, delete' }}
+              </button>
+              <button (click)="showDeleteUserConfirm = false" class="text-neutral-400 hover:text-white px-4 py-2 text-sm transition">Cancel</button>
+            </div>
+            <p *ngIf="deleteUserMsg" class="mt-3 text-sm" [class]="deleteUserSuccess ? 'text-blue-400' : 'text-red-400'">{{ deleteUserMsg }}</p>
+          </div>
+        </div>
+      </section>
     </div>
   `
 })
@@ -309,6 +384,7 @@ export class AdminComponent implements OnInit {
     { key: 'delete-album' as Tab, label: '📀 Delete Album' },
     { key: 'categories' as Tab, label: '🏷️ Categories' },
     { key: 'languages' as Tab, label: '🌐 Languages' },
+    { key: 'delete-user' as Tab, label: '👤 Delete User' },
   ];
 
   artists: any[] = [];
@@ -352,6 +428,22 @@ export class AdminComponent implements OnInit {
   deletingAlbum = false;
   deleteMsg = '';
   deleteSuccess = false;
+
+  // Delete User
+  userDeleteSearch = '';
+  showDeleteUserConfirm = false;
+  userToDelete: any = null;
+  deletingUser = false;
+  deleteUserMsg = '';
+  deleteUserSuccess = false;
+
+  get filteredDeleteUsers() {
+    const q = this.userDeleteSearch.trim().toLowerCase();
+    if (!q) return this.allUsers;
+    return this.allUsers.filter((u: any) =>
+      u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+    );
+  }
 
   constructor(private supabase: SupabaseService, private cdr: ChangeDetectorRef) {}
 
@@ -476,6 +568,31 @@ export class AdminComponent implements OnInit {
   fmtDur(s: number): string {
     if (!s) return '--:--';
     return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+  }
+
+  confirmDeleteUser(user: any) {
+    this.userToDelete = user;
+    this.deleteUserMsg = '';
+    this.showDeleteUserConfirm = true;
+  }
+
+  async executeDeleteUser() {
+    if (!this.userToDelete) return;
+    this.deletingUser = true;
+    this.deleteUserMsg = '';
+    try {
+      await this.supabase.deleteUser(this.userToDelete.id);
+      this.deleteUserSuccess = true;
+      this.deleteUserMsg = `User "${this.userToDelete.username}" deleted successfully.`;
+      this.allUsers = await this.supabase.getAllUsers();
+      this.showDeleteUserConfirm = false;
+      this.userToDelete = null;
+    } catch (e: any) {
+      this.deleteUserSuccess = false;
+      this.deleteUserMsg = e?.message || 'Failed to delete user.';
+    }
+    this.deletingUser = false;
+    this.cdr.detectChanges();
   }
 
   async addCategory() {
