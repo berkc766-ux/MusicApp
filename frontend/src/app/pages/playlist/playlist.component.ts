@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
 import { AuthService } from '../../services/auth';
+import { EventBusService } from '../../services/event-bus';
 
 @Component({
   selector: 'app-playlist',
@@ -61,7 +62,7 @@ import { AuthService } from '../../services/auth';
           <button *ngIf="isSharedWithMe" (click)="confirmRemoveShared()"
             class="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 hover:text-red-300 text-sm font-semibold px-4 py-2 rounded-full transition">
             <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current"><path d="M19 13H5v-2h14v2z"/></svg>
-            Remove from Library
+            Remove
           </button>
         </div>
 
@@ -305,7 +306,8 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private route: ActivatedRoute,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private eventBus: EventBusService
   ) {}
 
   async ngOnInit() {
@@ -426,6 +428,7 @@ export class PlaylistComponent implements OnInit, OnDestroy {
     this.removingShared = true;
     try {
       await this.supabase.removeSharedPlaylist(this.playlistId, this.currentUser.id);
+      this.eventBus.triggerSidebarRefresh();
       this.router.navigate(['/dashboard']);
     } catch (e) {
       console.error(e);

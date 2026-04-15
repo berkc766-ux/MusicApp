@@ -9,7 +9,7 @@ import { AuthService } from '../../services/auth';
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <div class="pb-16">
+    <div class="pb-28">
 
       <!-- Loading -->
       <div *ngIf="loading" class="flex items-center justify-center mt-20">
