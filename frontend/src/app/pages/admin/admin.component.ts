@@ -10,7 +10,7 @@ type Tab = 'songs-by-artist' | 'user-playlists' | 'rename-song' | 'add-artist' |
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="pb-16">
+    <div class="pb-28">
       <h2 class="text-3xl font-bold text-white mb-2">Admin Panel</h2>
       <p class="text-neutral-400 text-sm mb-6">Manage artists, songs, albums, users and more.</p>
 
